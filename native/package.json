@@ -14,5 +14,10 @@
     "react": "19.2.3",
     "react-native": "0.86.3",
     "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/three": "^0.186.0",
+    "typescript": "^6.0.3"
   }
 }
