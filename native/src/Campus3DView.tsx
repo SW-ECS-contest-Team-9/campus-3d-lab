@@ -35,6 +35,8 @@ export interface Campus3DProps {
   style?: StyleProp<ViewStyle>;
   /** 측정용: 손으로 움직이는 동안 프레임 간격을 3 s 마다 console.log('FRAMES …') */
   logFrames?: boolean;
+  /** 측정용: LOAD3D·FIRST_FRAME·FRAMES 글을 앱에도 넘김(삼성 실기기는 release 앱의 console 을 logcat 에 안 남김) */
+  onStats?: (text: string) => void;
 }
 
 async function loadGlb(): Promise<ArrayBuffer> {
@@ -49,11 +51,13 @@ async function loadGlb(): Promise<ArrayBuffer> {
   }
 }
 
-export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function Campus3DView({ onEvent, light = false, style, logFrames = false }, ref) {
+export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function Campus3DView({ onEvent, light = false, style, logFrames = false, onStats }, ref) {
   const sceneRef = useRef<CampusScene | null>(null);
   const queue = useRef<unknown[]>([]);
   const handler = useRef(onEvent);
-  useEffect(() => { handler.current = onEvent; });
+  const statsRef = useRef(onStats);
+  useEffect(() => { handler.current = onEvent; statsRef.current = onStats; });
+  const stat = (t: string) => { console.log(t); statsRef.current?.(t); };
   const [markers, setMarkers] = useState<{ ok: string | null; uncertain: string | null }>({ ok: null, uncertain: null });
   const [markerState, setMarkerState] = useState<'ok' | 'uncertain' | null>(null);
   const markerPos = useRef(new Animated.ValueXY({ x: -999, y: -999 })).current;
@@ -86,7 +90,7 @@ export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function C
       const scene = await createCampusScene({ renderer, width: w, height: h, glb, light, emit: (e) => handler.current?.(e) });
       sceneRef.current = scene;
       for (const m of queue.current.splice(0)) scene.command(m);
-      console.log(`LOAD3D asset ${tAsset - t0} ms, scene ${Date.now() - tAsset} ms, total ${Date.now() - t0} ms, buffer ${w}x${h}`);
+      stat(`LOAD3D asset ${tAsset - t0} ms, scene ${Date.now() - tAsset} ms, total ${Date.now() - t0} ms, buffer ${w}x${h}`);
       let first = true;
       const frames: number[] = [];
       let lastLog = Date.now();
@@ -94,7 +98,7 @@ export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function C
         const drew = scene.frameTick();
         if (drew) {
           gl.endFrameEXP();
-          if (first) { first = false; console.log(`FIRST_FRAME ${Date.now() - t0} ms`, JSON.stringify(scene.info())); }
+          if (first) { first = false; stat(`FIRST_FRAME ${Date.now() - t0} ms ${JSON.stringify(scene.info())}`); }
           if (logFrames) frames.push(Date.now());
         }
         const p = scene.markerScreen();
@@ -103,7 +107,7 @@ export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function C
         if (logFrames && Date.now() - lastLog > 3000 && frames.length > 10) {
           const d = frames.slice(1).map((t, i) => t - frames[i]).sort((a, b) => a - b);
           const q = (x: number) => d[Math.min(d.length - 1, Math.floor(d.length * x))];
-          console.log(`FRAMES n=${d.length} p50=${q(0.5)} p95=${q(0.95)} max=${d[d.length - 1]} ms`);
+          stat(`FRAMES n=${d.length} p50=${q(0.5)} p95=${q(0.95)} max=${d[d.length - 1]} ms`);
           frames.length = 0; lastLog = Date.now();
         }
         requestAnimationFrame(loop);

@@ -67,6 +67,9 @@ export async function createCampusScene(o: SceneOptions) {
     b.floors.push({ m: n.userData.m, name: n.userData.name, node: meshOf(n) });
   }
   for (const b of buildings.values()) b.floors.sort((a, c) => a.m - c.m);
+  // 블록(예: '한림관#고리')은 기본 건물('한림관')에 딸림 — 펼치기·비침·고르기를 함께
+  const baseId = (id: string) => id.split('#')[0];
+  const blocksOf = (id: string) => [...buildings.values()].filter((b) => baseId(b.id) === id);
   // 건물 재질은 하나를 나눠 씀 → 비침(한 층 보기)을 위해 건물마다 복제
   for (const b of buildings.values()) { const m = (b.node.material as THREE.MeshStandardMaterial).clone(); m.transparent = false; b.node.material = m; }
   for (const b of buildings.values()) for (const f of b.floors) f.node.material = new THREE.MeshLambertMaterial({ color: COLOR.floor, vertexColors: false, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
@@ -163,19 +166,19 @@ export async function createCampusScene(o: SceneOptions) {
       m.transparent = false; m.opacity = 1; m.depthWrite = true;
       for (const f of b.floors) { f.node.visible = false; f.node.position.y = 0; }
     }
-    const b = id ? buildings.get(id) : null;
+    const b = id ? buildings.get(id) ?? blocksOf(id).find((x) => x.floors.length) ?? null : null;
     if (!b) { floorState = null; emit({ type: 'floorChanged', building: null, floor: null, explode: false }); dirty(); return; }
     const index = ref || z !== null ? matchFloor(b.floors, ref, z) : -1;
     floorState = { building: b.id, index: index >= 0 ? index : null, explode };
     if (explode) {
-      b.node.visible = false;
+      for (const blk of blocksOf(baseId(b.id))) blk.node.visible = false;
       b.floors.forEach((f, i) => { f.node.visible = true; f.node.position.y = i * EXPLODE_GAP; const mat = f.node.material as THREE.MeshLambertMaterial; mat.color.setHex(i === index ? COLOR.floorNow : COLOR.floor); mat.opacity = index < 0 || i === index ? 0.95 : 0.55; });
     } else if (index >= 0) {
       // 그 자리에서 그 층 판만, 모든 건물을 비침
       for (const o2 of buildings.values()) { const m = o2.node.material as THREE.MeshStandardMaterial; m.transparent = true; m.opacity = 0.25; m.depthWrite = false; }
       const f = b.floors[index]; f.node.visible = true; (f.node.material as THREE.MeshLambertMaterial).color.setHex(COLOR.floorNow); (f.node.material as THREE.MeshLambertMaterial).opacity = 0.95;
     }
-    emit({ type: 'floorChanged', building: b.id, floor: index >= 0 ? b.floors[index].name : null, explode });
+    emit({ type: 'floorChanged', building: baseId(b.id), floor: index >= 0 ? b.floors[index].name : null, explode });
     placeMarker();
     dirty();
   }
@@ -232,7 +235,8 @@ export async function createCampusScene(o: SceneOptions) {
     if (hit) {
       const b = [...buildings.values()].find((q) => q.node === hit.object || q.floors.some((f) => f.node === hit.object))!;
       const t = toTm(hit.point);
-      emit({ type: 'pick', kind: 'building', id: b.id, name: b.name, x: Math.round(t.x * 100) / 100, y: Math.round(t.y * 100) / 100, z: Math.round(t.z * 100) / 100 });
+      const main = buildings.get(baseId(b.id)) ?? b;
+      emit({ type: 'pick', kind: 'building', id: main.id, name: main.name, x: Math.round(t.x * 100) / 100, y: Math.round(t.y * 100) / 100, z: Math.round(t.z * 100) / 100 });
       return;
     }
     const g = ray.intersectObjects(groundTargets, true)[0];
@@ -250,7 +254,13 @@ export async function createCampusScene(o: SceneOptions) {
       case 'setRoute': setRoute(c.points, c.floorChanges); break;
       case 'clearRoute': clearRoute(); break;
       case 'focus': { const v = fromTm(c.x, c.y, c.z ?? 0); if (c.z === null) v.y = groundAt(v.x, v.z); cam.target.copy(v); cam.dist = 140; follow.paused = true; if (c.building) setFloorView(c.building, c.floor, true); dirty(); break; }
-      case 'setFloor': setFloorView(c.building, c.floor, c.explode); break;
+      case 'setFloor': {
+        setFloorView(c.building, c.floor, c.explode);
+        // 펼칠 때는 그 건물로 시점을 옮김(펼친 층 전체가 보이게)
+        const bs = blocksOf(baseId(c.building));
+        if (bs.length && c.explode) { const bb = new THREE.Box3(); for (const x of bs) { bb.expandByObject(x.node); for (const f of x.floors) bb.expandByObject(f.node); } bb.getCenter(cam.target); cam.dist = Math.max(120, bb.getSize(new THREE.Vector3()).length() * 1.6 + bs.reduce((n, x) => Math.max(n, x.floors.length), 0) * EXPLODE_GAP); follow.paused = true; dirty(); }
+        break;
+      }
       case 'setMarkerImages': break; // 그림은 앱(RN)이 화면 위에 직접 그림
       case 'setMode': if (c.light !== null && c.light !== light) { light = c.light; applyLight(); dirty(); } break;
     }
@@ -282,7 +292,7 @@ export async function createCampusScene(o: SceneOptions) {
   }
   resize(o.width, o.height);
   const info = () => ({ ...renderer.info.render, geometries: renderer.info.memory.geometries });
-  emit({ type: 'ready', buildings: [...buildings.values()].map((b) => ({ id: b.id, name: b.name })), light });
+  emit({ type: 'ready', buildings: [...buildings.values()].filter((b) => baseId(b.id) === b.id).map((b) => ({ id: b.id, name: b.name })), light });
   return { command, frameTick, resize, pan, zoom, rotate, tilt, tap, home, markerScreen, info, resumeFollow: () => { follow.paused = false; } };
 }
 

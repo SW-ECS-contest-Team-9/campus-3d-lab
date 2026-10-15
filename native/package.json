@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "android": "expo run:android",
-    "test": "node --test ../export/test"
+    "test": "node --test ../export/test/glb.test.mjs"
   },
   "dependencies": {
     "expo": "57.0.28",

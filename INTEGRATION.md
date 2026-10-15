@@ -33,7 +33,7 @@
    <Campus3DView ref={native} light={light} onEvent={(e) => receive(e)} />
    ```
    `receive` 는 객체도 받음(`parseEvent` 가 객체·문자열 둘 다 처리하는지 확인). 명령·사건 형식이 같아 화면(MapSlot) 코드는 그대로.
-4. 자료 갱신: 모델링이 바뀌면 `node tools/serve.mjs vendor/tracker/frontend/dist 5291` → `node export/capture.mjs` → `python export/ground-rgba.py` → `node export/build-glb.mjs` → `node --test export/test`.
+4. 자료 갱신: 모델링이 바뀌면 `node tools/serve.mjs vendor/tracker/frontend/dist 5291` → `node export/capture.mjs` → `python export/ground-rgba.py` → `node export/build-glb.mjs` → `node --test export/test/glb.test.mjs`.
    지도 꾸러미와 함께 내려받게 하려면 `campus.glb` 를 꾸러미에 넣고 부품의 `loadGlb()` 를 꾸러미 파일 경로로 바꾸면 됨(지금은 앱에 묶음).
 
 ## 측정 다시 하기
