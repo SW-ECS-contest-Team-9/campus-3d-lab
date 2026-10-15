@@ -21,7 +21,7 @@ const expr = extra ?? `(() => { const c = document.querySelector('canvas'); let 
   return JSON.stringify({ url: location.href, status: document.getElementById('c3d-status')?.textContent, statusHidden: document.getElementById('c3d-status')?.hidden,
     canvas: c ? [c.width, c.height, c.clientWidth, c.clientHeight] : null, gl: gl ? { v: gl.getParameter(gl.VERSION), lost: gl.isContextLost(), attrs: gl.getContextAttributes(), maxTex: gl.getParameter(gl.MAX_TEXTURE_SIZE), renderer: d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : null } : null,
     mem: performance.memory ? { used: Math.round(performance.memory.usedJSHeapSize / 1e6), limit: Math.round(performance.memory.jsHeapSizeLimit / 1e6) } : null,
-    events: (window.__c3dEvents || []).map((e) => e.type), cesium: !!window.Cesium, dpr: devicePixelRatio, ua: navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0] }); })()`;
+    events: (window.__c3dEvents || []).map((e) => e.type), cesium: !!window.Cesium, dpr: devicePixelRatio }); })()`;
 const r = await call('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true });
 console.log(r.result?.result?.value ?? JSON.stringify(r.result ?? r.error));
 await new Promise((r) => setTimeout(r, 3000));

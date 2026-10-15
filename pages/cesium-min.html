@@ -1,0 +1,15 @@
+<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body,#m{margin:0;width:100%;height:100%}</style>
+<link rel="stylesheet" href="cesium/Widgets/widgets.css"><div id="m"></div>
+<script src="cesium/Cesium.js"></script>
+<script>
+// 시험 (a'): 우리 자료 없이 Cesium 만. ?globe=1 이면 지구(지형 없음), ?msaa=N, ?rr=1 requestRenderMode
+const q = new URLSearchParams(location.search);
+const t0 = performance.now();
+const v = new Cesium.Viewer('m', { baseLayer: false, globe: q.get('globe') === '1' ? undefined : false, animation: false, timeline: false, baseLayerPicker: false, geocoder: false, homeButton: false, sceneModePicker: false, navigationHelpButton: false, fullscreenButton: false, infoBox: false, selectionIndicator: false, scene3DOnly: true, requestRenderMode: q.get('rr') === '1', msaaSamples: +(q.get('msaa') ?? 4) });
+v.scene.backgroundColor = Cesium.Color.fromCssColorString('#ffd400');
+v.scene.skyBox.show = false; v.scene.skyAtmosphere.show = false;
+const p = Cesium.Cartesian3.fromDegrees(127.0127, 37.615, 50);
+v.entities.add({ position: p, box: { dimensions: new Cesium.Cartesian3(60, 60, 60), material: Cesium.Color.RED } });
+v.camera.lookAt(p, new Cesium.HeadingPitchRange(0.3, -0.6, 300));
+let n = 0; v.scene.postRender.addEventListener(() => { if (++n === 3) { const msg = JSON.stringify({ type: 'ready', ms: Math.round(performance.now() - t0), webgl2: v.scene.context.webgl2, msaa: v.scene.msaaSamples }); console.log('CESIUM_MIN ' + msg); window.ReactNativeWebView && ReactNativeWebView.postMessage(msg); } });
+</script>

@@ -1,0 +1,7 @@
+127.0.0.1 - - [15/Oct/2026 14:15:14] "GET /webgl-hello.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:15:38] "GET /webgl-hello.html?gl=webgl&aa=0 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:15:48] code 404, message File not found
+127.0.0.1 - - [15/Oct/2026 14:15:48] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [15/Oct/2026 14:17:11] "GET /webgl-hello.html HTTP/1.1" 304 -
+127.0.0.1 - - [15/Oct/2026 14:17:21] code 404, message File not found
+127.0.0.1 - - [15/Oct/2026 14:17:21] "GET /favicon.ico HTTP/1.1" 404 -
