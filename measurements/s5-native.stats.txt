@@ -1,0 +1,4 @@
+text="LOAD3D asset 67 ms, scene 95 ms, total 162 ms, buffer 1080x2400"
+text="FRAMES n=10 p50=17 p95=3164 max=3164 ms"
+text="FRAMES n=149 p50=17 p95=20 max=154 ms"
+text="FRAMES n=55 p50=17 p95=19 max=170 ms"

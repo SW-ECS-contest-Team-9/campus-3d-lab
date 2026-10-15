@@ -1,0 +1,1903 @@
+{
+ "summary": {
+  "file": "native/assets/campus.glb",
+  "bytes": 11332196,
+  "groupsIn": 9705,
+  "skipped": 0,
+  "ground": {
+   "v": 52200,
+   "t": 103488,
+   "b": 1456128
+  },
+  "structures": {
+   "v": 240169,
+   "t": 143076,
+   "b": 5559616
+  },
+  "surfaces": {
+   "v": 36550,
+   "t": 43837,
+   "b": 847822
+  },
+  "lines": {
+   "v": 8820,
+   "t": 0,
+   "b": 158788
+  },
+  "buildings": {
+   "count": 40,
+   "v": 77550,
+   "t": 26438,
+   "b": 2330028
+  },
+  "floors": {
+   "count": 266,
+   "v": 21985,
+   "t": 11576,
+   "b": 685036,
+   "maxBytes": 13848
+  }
+ },
+ "nodes": [
+  {
+   "name": "ground",
+   "vertices": 52200,
+   "triangles": 103488,
+   "bytes": 1456128
+  },
+  {
+   "name": "structures",
+   "vertices": 240169,
+   "triangles": 143076,
+   "bytes": 5559616
+  },
+  {
+   "name": "surfaces",
+   "vertices": 36550,
+   "triangles": 43837,
+   "bytes": 847822
+  },
+  {
+   "name": "lines",
+   "vertices": 8820,
+   "triangles": 0,
+   "bytes": 158788
+  },
+  {
+   "name": "b|한림관",
+   "vertices": 642,
+   "triangles": 258,
+   "bytes": 19524
+  },
+  {
+   "name": "b|문예관",
+   "vertices": 5778,
+   "triangles": 1938,
+   "bytes": 173412
+  },
+  {
+   "name": "b|한림관#고리",
+   "vertices": 3411,
+   "triangles": 1219,
+   "bytes": 102822
+  },
+  {
+   "name": "b|청운관",
+   "vertices": 4353,
+   "triangles": 1473,
+   "bytes": 130722
+  },
+  {
+   "name": "b|혜인관#가운데높은상자",
+   "vertices": 132,
+   "triangles": 48,
+   "bytes": 3984
+  },
+  {
+   "name": "b|혜인관#북동높은상자",
+   "vertices": 276,
+   "triangles": 96,
+   "bytes": 8304
+  },
+  {
+   "name": "b|추가-혜인관뒤유리탑",
+   "vertices": 354,
+   "triangles": 122,
+   "bytes": 10644
+  },
+  {
+   "name": "b|혜인관#옥상상자",
+   "vertices": 1440,
+   "triangles": 512,
+   "bytes": 43392
+  },
+  {
+   "name": "b|혜인관#남서낮은상자",
+   "vertices": 132,
+   "triangles": 48,
+   "bytes": 3984
+  },
+  {
+   "name": "b|혜인관#북동뒤낮은곳",
+   "vertices": 78,
+   "triangles": 30,
+   "bytes": 2364
+  },
+  {
+   "name": "b|혜인관#뒤낮은곳",
+   "vertices": 78,
+   "triangles": 30,
+   "bytes": 2364
+  },
+  {
+   "name": "b|혜인관#북동낮은곳",
+   "vertices": 72,
+   "triangles": 28,
+   "bytes": 2184
+  },
+  {
+   "name": "b|대일관",
+   "vertices": 4911,
+   "triangles": 1683,
+   "bytes": 147606
+  },
+  {
+   "name": "b|혜인관",
+   "vertices": 1710,
+   "triangles": 586,
+   "bytes": 51396
+  },
+  {
+   "name": "b|추가-상승관동쪽끝",
+   "vertices": 174,
+   "triangles": 62,
+   "bytes": 5244
+  },
+  {
+   "name": "b|추가-상승관",
+   "vertices": 510,
+   "triangles": 174,
+   "bytes": 15324
+  },
+  {
+   "name": "b|북악관",
+   "vertices": 11832,
+   "triangles": 3948,
+   "bytes": 354984
+  },
+  {
+   "name": "b|청운관#북동저층부",
+   "vertices": 45,
+   "triangles": 23,
+   "bytes": 1398
+  },
+  {
+   "name": "b|추가-청운관북서낮은부분",
+   "vertices": 30,
+   "triangles": 16,
+   "bytes": 936
+  },
+  {
+   "name": "b|은주관#탑",
+   "vertices": 210,
+   "triangles": 114,
+   "bytes": 6564
+  },
+  {
+   "name": "b|은주관#동쪽끝-높은부분",
+   "vertices": 351,
+   "triangles": 123,
+   "bytes": 10566
+  },
+  {
+   "name": "b|은주관#2관",
+   "vertices": 1764,
+   "triangles": 592,
+   "bytes": 52944
+  },
+  {
+   "name": "b|은주관#접합부-남서날개",
+   "vertices": 1710,
+   "triangles": 576,
+   "bytes": 51336
+  },
+  {
+   "name": "b|은주관#동쪽끝-남쪽날개",
+   "vertices": 234,
+   "triangles": 82,
+   "bytes": 7044
+  },
+  {
+   "name": "b|은주관#접합부",
+   "vertices": 615,
+   "triangles": 267,
+   "bytes": 18822
+  },
+  {
+   "name": "b|은주관",
+   "vertices": 2370,
+   "triangles": 804,
+   "bytes": 71184
+  },
+  {
+   "name": "b|은주관#동쪽끝-낮은부분",
+   "vertices": 222,
+   "triangles": 80,
+   "bytes": 6696
+  },
+  {
+   "name": "b|추가-문예관저층부",
+   "vertices": 48,
+   "triangles": 24,
+   "bytes": 1488
+  },
+  {
+   "name": "b|은주관#2관-낮은단",
+   "vertices": 48,
+   "triangles": 26,
+   "bytes": 1500
+  },
+  {
+   "name": "b|수인관",
+   "vertices": 11199,
+   "triangles": 3739,
+   "bytes": 336006
+  },
+  {
+   "name": "b|유담관#기단데크",
+   "vertices": 1899,
+   "triangles": 719,
+   "bytes": 57486
+  },
+  {
+   "name": "b|추가-공연실습소",
+   "vertices": 534,
+   "triangles": 194,
+   "bytes": 16116
+  },
+  {
+   "name": "b|추가-외국인생활관",
+   "vertices": 870,
+   "triangles": 298,
+   "bytes": 26148
+  },
+  {
+   "name": "b|유담관",
+   "vertices": 1800,
+   "triangles": 600,
+   "bytes": 54000
+  },
+  {
+   "name": "b|유담관#탑2",
+   "vertices": 840,
+   "triangles": 280,
+   "bytes": 25200
+  },
+  {
+   "name": "b|유담관#탑3",
+   "vertices": 873,
+   "triangles": 291,
+   "bytes": 26190
+  },
+  {
+   "name": "b|유담관#탑4",
+   "vertices": 750,
+   "triangles": 250,
+   "bytes": 22500
+  },
+  {
+   "name": "b|유담관#탑5",
+   "vertices": 828,
+   "triangles": 276,
+   "bytes": 24840
+  },
+  {
+   "name": "b|유담관#탑6",
+   "vertices": 1689,
+   "triangles": 563,
+   "bytes": 50670
+  },
+  {
+   "name": "b|본관",
+   "vertices": 12738,
+   "triangles": 4246,
+   "bytes": 382140
+  },
+  {
+   "name": "f|한림관|1",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|2",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|3",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|4",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|5",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|6",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|7",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|8",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|9",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|10",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|11",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|12",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|13",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|한림관|14",
+   "vertices": 120,
+   "triangles": 70,
+   "bytes": 3780
+  },
+  {
+   "name": "f|문예관|0",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|1",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|2",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|3",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|4",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|5",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|6",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|7",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|8",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|9",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|10",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|11",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|12",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|13",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|문예관|14",
+   "vertices": 40,
+   "triangles": 22,
+   "bytes": 1252
+  },
+  {
+   "name": "f|한림관#고리|0",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|1",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|2",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|3",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|4",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|5",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|6",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|7",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|8",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|9",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|10",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|11",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|한림관#고리|12",
+   "vertices": 205,
+   "triangles": 123,
+   "bytes": 6478
+  },
+  {
+   "name": "f|청운관|0",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|청운관|1",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|청운관|2",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|청운관|3",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|청운관|4",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|청운관|5",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|청운관|6",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|청운관|7",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|청운관|8",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|청운관|9",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|청운관|10",
+   "vertices": 65,
+   "triangles": 37,
+   "bytes": 2042
+  },
+  {
+   "name": "f|혜인관#가운데높은상자|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#가운데높은상자|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#가운데높은상자|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#가운데높은상자|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#가운데높은상자|4",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#가운데높은상자|5",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#가운데높은상자|6",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동높은상자|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동높은상자|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동높은상자|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동높은상자|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동높은상자|4",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동높은상자|5",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동높은상자|6",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관|5",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|6",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|7",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|8",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|9",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|10",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|11",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|12",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|13",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|14",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|15",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|유담관|16",
+   "vertices": 100,
+   "triangles": 46,
+   "bytes": 3076
+  },
+  {
+   "name": "f|추가-혜인관뒤유리탑|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-혜인관뒤유리탑|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-혜인관뒤유리탑|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-혜인관뒤유리탑|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-혜인관뒤유리탑|4",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-혜인관뒤유리탑|5",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-혜인관뒤유리탑|6",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#옥상상자|0",
+   "vertices": 90,
+   "triangles": 52,
+   "bytes": 2832
+  },
+  {
+   "name": "f|혜인관#옥상상자|1",
+   "vertices": 90,
+   "triangles": 52,
+   "bytes": 2832
+  },
+  {
+   "name": "f|혜인관#옥상상자|2",
+   "vertices": 90,
+   "triangles": 52,
+   "bytes": 2832
+  },
+  {
+   "name": "f|혜인관#옥상상자|3",
+   "vertices": 90,
+   "triangles": 52,
+   "bytes": 2832
+  },
+  {
+   "name": "f|혜인관#옥상상자|4",
+   "vertices": 90,
+   "triangles": 52,
+   "bytes": 2832
+  },
+  {
+   "name": "f|혜인관#옥상상자|5",
+   "vertices": 90,
+   "triangles": 52,
+   "bytes": 2832
+  },
+  {
+   "name": "f|혜인관#옥상상자|6",
+   "vertices": 90,
+   "triangles": 52,
+   "bytes": 2832
+  },
+  {
+   "name": "f|유담관#탑2|5",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|6",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|7",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|8",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|9",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|10",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|11",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|12",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|13",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|14",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|15",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑2|16",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑3|7",
+   "vertices": 50,
+   "triangles": 25,
+   "bytes": 1550
+  },
+  {
+   "name": "f|유담관#탑3|8",
+   "vertices": 50,
+   "triangles": 25,
+   "bytes": 1550
+  },
+  {
+   "name": "f|유담관#탑3|9",
+   "vertices": 50,
+   "triangles": 25,
+   "bytes": 1550
+  },
+  {
+   "name": "f|유담관#탑3|10",
+   "vertices": 50,
+   "triangles": 25,
+   "bytes": 1550
+  },
+  {
+   "name": "f|유담관#탑3|11",
+   "vertices": 50,
+   "triangles": 25,
+   "bytes": 1550
+  },
+  {
+   "name": "f|유담관#탑3|12",
+   "vertices": 50,
+   "triangles": 25,
+   "bytes": 1550
+  },
+  {
+   "name": "f|유담관#탑3|13",
+   "vertices": 50,
+   "triangles": 25,
+   "bytes": 1550
+  },
+  {
+   "name": "f|유담관#탑3|14",
+   "vertices": 50,
+   "triangles": 25,
+   "bytes": 1550
+  },
+  {
+   "name": "f|유담관#탑3|15",
+   "vertices": 50,
+   "triangles": 25,
+   "bytes": 1550
+  },
+  {
+   "name": "f|유담관#탑3|16",
+   "vertices": 50,
+   "triangles": 25,
+   "bytes": 1550
+  },
+  {
+   "name": "f|유담관#탑4|7",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑4|8",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑4|9",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑4|10",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑4|11",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑4|12",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑4|13",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑4|14",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑4|15",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|유담관#탑4|16",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#남서낮은상자|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#남서낮은상자|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#남서낮은상자|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#남서낮은상자|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#남서낮은상자|4",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#남서낮은상자|5",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동뒤낮은곳|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동뒤낮은곳|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동뒤낮은곳|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동뒤낮은곳|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동뒤낮은곳|4",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동뒤낮은곳|5",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#뒤낮은곳|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#뒤낮은곳|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#뒤낮은곳|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#뒤낮은곳|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#뒤낮은곳|4",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#뒤낮은곳|5",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동낮은곳|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동낮은곳|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동낮은곳|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동낮은곳|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동낮은곳|4",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|혜인관#북동낮은곳|5",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|대일관|0",
+   "vertices": 125,
+   "triangles": 73,
+   "bytes": 3938
+  },
+  {
+   "name": "f|대일관|1",
+   "vertices": 125,
+   "triangles": 73,
+   "bytes": 3938
+  },
+  {
+   "name": "f|대일관|2",
+   "vertices": 125,
+   "triangles": 73,
+   "bytes": 3938
+  },
+  {
+   "name": "f|대일관|3",
+   "vertices": 125,
+   "triangles": 73,
+   "bytes": 3938
+  },
+  {
+   "name": "f|대일관|4",
+   "vertices": 125,
+   "triangles": 73,
+   "bytes": 3938
+  },
+  {
+   "name": "f|대일관|5",
+   "vertices": 125,
+   "triangles": 73,
+   "bytes": 3938
+  },
+  {
+   "name": "f|대일관|6",
+   "vertices": 125,
+   "triangles": 73,
+   "bytes": 3938
+  },
+  {
+   "name": "f|대일관|7",
+   "vertices": 125,
+   "triangles": 73,
+   "bytes": 3938
+  },
+  {
+   "name": "f|유담관#탑5|6",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑5|7",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑5|8",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑5|9",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑5|10",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑5|11",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑5|12",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑5|13",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑5|14",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑5|15",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑5|16",
+   "vertices": 130,
+   "triangles": 61,
+   "bytes": 4006
+  },
+  {
+   "name": "f|유담관#탑6|6",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|유담관#탑6|7",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|유담관#탑6|8",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|유담관#탑6|9",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|유담관#탑6|10",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|유담관#탑6|11",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|유담관#탑6|12",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|유담관#탑6|13",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|유담관#탑6|14",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|유담관#탑6|15",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|유담관#탑6|16",
+   "vertices": 450,
+   "triangles": 208,
+   "bytes": 13848
+  },
+  {
+   "name": "f|혜인관|0",
+   "vertices": 40,
+   "triangles": 24,
+   "bytes": 1264
+  },
+  {
+   "name": "f|혜인관|1",
+   "vertices": 40,
+   "triangles": 24,
+   "bytes": 1264
+  },
+  {
+   "name": "f|혜인관|2",
+   "vertices": 40,
+   "triangles": 24,
+   "bytes": 1264
+  },
+  {
+   "name": "f|혜인관|3",
+   "vertices": 40,
+   "triangles": 24,
+   "bytes": 1264
+  },
+  {
+   "name": "f|혜인관|4",
+   "vertices": 40,
+   "triangles": 24,
+   "bytes": 1264
+  },
+  {
+   "name": "f|추가-상승관동쪽끝|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-상승관동쪽끝|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-상승관동쪽끝|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-상승관동쪽끝|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-상승관|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-상승관|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-상승관|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|추가-상승관|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|북악관|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|북악관|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|북악관|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|북악관|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|북악관|4",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|북악관|5",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|북악관|6",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|북악관|7",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|북악관|8",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|은주관#동쪽끝-높은부분|1",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#동쪽끝-높은부분|2",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#동쪽끝-높은부분|3",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#동쪽끝-높은부분|4",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#2관|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|은주관#2관|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|은주관#2관|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|은주관#2관|4",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|은주관#접합부-남서날개|0",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#접합부-남서날개|1",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#접합부-남서날개|2",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#접합부-남서날개|3",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#접합부-남서날개|4",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#접합부-남서날개|5",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#동쪽끝-남쪽날개|0",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|은주관#동쪽끝-남쪽날개|1",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|은주관#동쪽끝-남쪽날개|2",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|은주관#동쪽끝-남쪽날개|3",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|은주관#동쪽끝-남쪽날개|4",
+   "vertices": 20,
+   "triangles": 10,
+   "bytes": 620
+  },
+  {
+   "name": "f|은주관#접합부|0",
+   "vertices": 155,
+   "triangles": 93,
+   "bytes": 4898
+  },
+  {
+   "name": "f|은주관#접합부|1",
+   "vertices": 155,
+   "triangles": 93,
+   "bytes": 4898
+  },
+  {
+   "name": "f|은주관#접합부|2",
+   "vertices": 155,
+   "triangles": 93,
+   "bytes": 4898
+  },
+  {
+   "name": "f|은주관#접합부|3",
+   "vertices": 155,
+   "triangles": 93,
+   "bytes": 4898
+  },
+  {
+   "name": "f|은주관#접합부|4",
+   "vertices": 155,
+   "triangles": 93,
+   "bytes": 4898
+  },
+  {
+   "name": "f|은주관#접합부|5",
+   "vertices": 155,
+   "triangles": 93,
+   "bytes": 4898
+  },
+  {
+   "name": "f|은주관|0",
+   "vertices": 45,
+   "triangles": 25,
+   "bytes": 1410
+  },
+  {
+   "name": "f|은주관|1",
+   "vertices": 45,
+   "triangles": 25,
+   "bytes": 1410
+  },
+  {
+   "name": "f|은주관|2",
+   "vertices": 45,
+   "triangles": 25,
+   "bytes": 1410
+  },
+  {
+   "name": "f|은주관|3",
+   "vertices": 45,
+   "triangles": 25,
+   "bytes": 1410
+  },
+  {
+   "name": "f|은주관|4",
+   "vertices": 45,
+   "triangles": 25,
+   "bytes": 1410
+  },
+  {
+   "name": "f|은주관|5",
+   "vertices": 45,
+   "triangles": 25,
+   "bytes": 1410
+  },
+  {
+   "name": "f|은주관#동쪽끝-낮은부분|0",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#동쪽끝-낮은부분|1",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#동쪽끝-낮은부분|2",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#동쪽끝-낮은부분|3",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|은주관#동쪽끝-낮은부분|4",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|본관|0",
+   "vertices": 60,
+   "triangles": 34,
+   "bytes": 1884
+  },
+  {
+   "name": "f|본관|1",
+   "vertices": 60,
+   "triangles": 34,
+   "bytes": 1884
+  },
+  {
+   "name": "f|본관|2",
+   "vertices": 60,
+   "triangles": 34,
+   "bytes": 1884
+  },
+  {
+   "name": "f|본관|3",
+   "vertices": 60,
+   "triangles": 34,
+   "bytes": 1884
+  },
+  {
+   "name": "f|본관|4",
+   "vertices": 60,
+   "triangles": 34,
+   "bytes": 1884
+  },
+  {
+   "name": "f|본관|5",
+   "vertices": 60,
+   "triangles": 34,
+   "bytes": 1884
+  },
+  {
+   "name": "f|본관|6",
+   "vertices": 60,
+   "triangles": 34,
+   "bytes": 1884
+  },
+  {
+   "name": "f|수인관|0",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|수인관|1",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|수인관|2",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|수인관|3",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|수인관|4",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|수인관|5",
+   "vertices": 25,
+   "triangles": 13,
+   "bytes": 778
+  },
+  {
+   "name": "f|유담관#기단데크|4",
+   "vertices": 335,
+   "triangles": 177,
+   "bytes": 10442
+  },
+  {
+   "name": "f|유담관#기단데크|5",
+   "vertices": 335,
+   "triangles": 177,
+   "bytes": 10442
+  },
+  {
+   "name": "f|유담관#기단데크|6",
+   "vertices": 335,
+   "triangles": 177,
+   "bytes": 10442
+  },
+  {
+   "name": "f|유담관#기단데크|7",
+   "vertices": 335,
+   "triangles": 177,
+   "bytes": 10442
+  },
+  {
+   "name": "f|유담관#기단데크|8",
+   "vertices": 335,
+   "triangles": 177,
+   "bytes": 10442
+  },
+  {
+   "name": "f|유담관#기단데크|9",
+   "vertices": 335,
+   "triangles": 177,
+   "bytes": 10442
+  },
+  {
+   "name": "f|추가-공연실습소|0",
+   "vertices": 50,
+   "triangles": 28,
+   "bytes": 1568
+  },
+  {
+   "name": "f|추가-공연실습소|1",
+   "vertices": 50,
+   "triangles": 28,
+   "bytes": 1568
+  },
+  {
+   "name": "f|추가-공연실습소|2",
+   "vertices": 50,
+   "triangles": 28,
+   "bytes": 1568
+  },
+  {
+   "name": "f|추가-공연실습소|3",
+   "vertices": 50,
+   "triangles": 28,
+   "bytes": 1568
+  },
+  {
+   "name": "f|추가-공연실습소|4",
+   "vertices": 50,
+   "triangles": 28,
+   "bytes": 1568
+  },
+  {
+   "name": "f|추가-외국인생활관|0",
+   "vertices": 30,
+   "triangles": 16,
+   "bytes": 936
+  },
+  {
+   "name": "f|추가-외국인생활관|1",
+   "vertices": 30,
+   "triangles": 16,
+   "bytes": 936
+  },
+  {
+   "name": "f|추가-외국인생활관|2",
+   "vertices": 30,
+   "triangles": 16,
+   "bytes": 936
+  },
+  {
+   "name": "f|추가-외국인생활관|3",
+   "vertices": 30,
+   "triangles": 16,
+   "bytes": 936
+  },
+  {
+   "name": "f|추가-외국인생활관|4",
+   "vertices": 30,
+   "triangles": 16,
+   "bytes": 936
+  }
+ ]
+}

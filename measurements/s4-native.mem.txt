@@ -1,0 +1,5 @@
+            Graphics:    61590                          61590
+           TOTAL PSS:   200063            TOTAL RSS:   318494       TOTAL SWAP PSS:      209
+         Native Heap:    74664                          75720
+    GL mtrack    16680    16680        0        0    16680                           
+   EGL mtrack    44910    44910        0        0    44910                           
