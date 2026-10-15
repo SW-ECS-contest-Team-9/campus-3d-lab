@@ -1,12 +1,13 @@
 // emulator-5580 의 WebView(또는 Chrome) 에 CDP 로 붙어 상태를 읽음. 사용: node tools/cdp-probe.mjs [webview|chrome] [js 식]
 // 출력: 페이지 주소, 상태 글, 캔버스·WebGL 속성, 메모리, 기록된 사건(__c3dEvents), 콘솔(붙은 뒤 3초).
 import { execSync } from 'node:child_process';
-const ADB = 'C:/Users/ssant/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5580';
+const ADB = 'C:/Users/ssant/AppData/Local/Android/Sdk/platform-tools/adb.exe -s ' + (process.env.DEV ?? 'emulator-5580');
 const kind = process.argv[2] ?? 'webview';
 const extra = process.argv[3];
 const socks = execSync(`${ADB} shell cat /proc/net/unix`).toString().split('\n').map((l) => l.trim().split(/\s+/).pop()).filter((s) => s?.startsWith('@') && s.includes(kind === 'chrome' ? 'chrome_devtools_remote' : 'webview_devtools_remote'));
 if (!socks.length) { console.log('devtools 소켓 없음'); process.exit(1); }
-const sock = socks[socks.length - 1].slice(1);
+let sock = socks[socks.length - 1].slice(1);
+if (kind !== 'chrome') { const pid = execSync(`${ADB} shell pidof ${process.env.PKG ?? 'kr.campus.lab'}`).toString().trim().split(/\s+/)[0]; const own = socks.find((s) => s.endsWith('_' + pid)); if (own) sock = own.slice(1); }
 execSync(`${ADB} forward tcp:9333 localabstract:${sock}`);
 const pages = await (await fetch('http://127.0.0.1:9333/json')).json();
 const page = pages.find((p) => p.type === 'page' && !p.url.startsWith('about')) ?? pages[0];

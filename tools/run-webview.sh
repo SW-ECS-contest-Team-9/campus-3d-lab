@@ -2,7 +2,7 @@
 # 사용: tools/run-webview.sh <이름> <url> [layer] [inject.js] [기다릴초]
 # emulator-5580 에서 시험 앱으로 띄우고 logcat(LAB·chromium) 과 갈무리를 out/<이름>.* 에 남김.
 export PATH=/c/Users/ssant/AppData/Local/Android/Sdk/platform-tools:$PATH
-A="adb -s emulator-5580"; N=$1; URL=$2; LAYER=${3:-none}; INJ=$4; W=${5:-40}
+A="adb -s ${DEV:-emulator-5580}"; N=$1; URL=$2; LAYER=${3:-none}; INJ=$4; W=${5:-40}
 mkdir -p out
 $A shell am force-stop kr.campus.lab; $A logcat -c
 EXTRA=""; [ -n "$INJ" ] && EXTRA="--es inject $(base64 -w0 "$INJ")"

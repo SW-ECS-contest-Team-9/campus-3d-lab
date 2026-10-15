@@ -5,3 +5,21 @@
 127.0.0.1 - - [15/Oct/2026 14:17:11] "GET /webgl-hello.html HTTP/1.1" 304 -
 127.0.0.1 - - [15/Oct/2026 14:17:21] code 404, message File not found
 127.0.0.1 - - [15/Oct/2026 14:17:21] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [15/Oct/2026 14:31:01] "GET /cesium-min.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:31:02] "GET /cesium/Widgets/widgets.css HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:31:02] "GET /cesium/Cesium.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:31:06] "GET /cesium/Assets/approximateTerrainHeights.json HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:31:06] "GET /cesium/Assets/IAU2006_XYS/IAU2006_XYS_18.json HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:31:07] "GET /cesium/Assets/Images/ion-credit.png HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:31:07] "GET /cesium/Assets/Textures/moonSmall.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:31:08] code 404, message File not found
+127.0.0.1 - - [15/Oct/2026 14:31:08] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [15/Oct/2026 14:31:58] "GET /cesium-min.html?msaa=1 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:31:59] "GET /cesium/Widgets/widgets.css HTTP/1.1" 304 -
+127.0.0.1 - - [15/Oct/2026 14:31:59] "GET /cesium/Cesium.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Oct/2026 14:32:02] "GET /cesium/Assets/approximateTerrainHeights.json HTTP/1.1" 304 -
+127.0.0.1 - - [15/Oct/2026 14:32:02] "GET /cesium/Assets/IAU2006_XYS/IAU2006_XYS_18.json HTTP/1.1" 304 -
+127.0.0.1 - - [15/Oct/2026 14:32:03] "GET /cesium/Assets/Images/ion-credit.png HTTP/1.1" 304 -
+127.0.0.1 - - [15/Oct/2026 14:32:03] "GET /cesium/Assets/Textures/moonSmall.jpg HTTP/1.1" 304 -
+127.0.0.1 - - [15/Oct/2026 14:32:04] code 404, message File not found
+127.0.0.1 - - [15/Oct/2026 14:32:04] "GET /favicon.ico HTTP/1.1" 404 -
