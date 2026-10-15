@@ -2,6 +2,7 @@
 // 같은 메시지 형식 v1: ref.post(명령) 으로 보내고 onEvent(사건) 으로 받음 — 앱 화면 코드는 바꾸지 않아도 됨.
 // 자료는 앱에 묶인 assets/campus.glb(웹 모델링을 구운 것, export/build-glb.mjs). 서버·인터넷 없이 뜸.
 import { Asset } from 'expo-asset';
+import { File } from 'expo-file-system';
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Animated, Image, PanResponder, PixelRatio, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
@@ -37,17 +38,15 @@ export interface Campus3DProps {
 }
 
 async function loadGlb(): Promise<ArrayBuffer> {
+  // 묶은 자산을 캐시 파일로 꺼낸 뒤(expo-asset) 통째로 읽음(expo-file-system). 지도 꾸러미에 넣을 땐 그 파일 경로를 바로 File 로.
   const asset = Asset.fromModule(CAMPUS_GLB);
   await asset.downloadAsync();
   const uri = asset.localUri ?? asset.uri;
-  return await new Promise<ArrayBuffer>((resolve, reject) => {
-    const x = new XMLHttpRequest();
-    x.open('GET', uri);
-    x.responseType = 'arraybuffer';
-    x.onload = () => (x.response ? resolve(x.response as ArrayBuffer) : reject(new Error('빈 응답')));
-    x.onerror = () => reject(new Error('campus.glb 를 읽지 못함'));
-    x.send();
-  });
+  try {
+    return await new File(uri).arrayBuffer();
+  } catch (err) {
+    throw new Error(`campus.glb 를 읽지 못함(${uri}): ${String((err as Error)?.message ?? err)}`);
+  }
 }
 
 export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function Campus3DView({ onEvent, light = false, style, logFrames = false }, ref) {
@@ -76,7 +75,11 @@ export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function C
       const w = Math.round(gl.drawingBufferWidth * k), h = Math.round(gl.drawingBufferHeight * k);
       scale.current = (PixelRatio.get() * k);
       const canvas: any = { width: w, height: h, style: {}, clientWidth: w, clientHeight: h, addEventListener: () => {}, removeEventListener: () => {}, getContext: () => gl };
-      const renderer = new THREE.WebGLRenderer({ canvas, context: gl as any, antialias: false, powerPreference: 'high-performance' });
+      // expo-gl 의 문맥은 GLES 3(WebGL2 함수 있음)이지만 WebGLRenderingContext 의 인스턴스라 three(r163+)가 WebGL1 로 보고 거절함 → 만들 때만 전역을 숨김
+      const G = globalThis as any, saved = G.WebGLRenderingContext;
+      G.WebGLRenderingContext = undefined;
+      let renderer: THREE.WebGLRenderer;
+      try { renderer = new THREE.WebGLRenderer({ canvas, context: gl as any, antialias: false, powerPreference: 'high-performance' }); } finally { G.WebGLRenderingContext = saved; }
       renderer.setPixelRatio(1);
       const glb = await loadGlb();
       const tAsset = Date.now();
