@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Campus3DLab",
+    "slug": "campus-3d-lab",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "android": {
+      "package": "kr.campus.lab3d",
+      "usesCleartextTraffic": true
+    },
+    "assetBundlePatterns": [
+      "assets/**"
+    ],
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-asset"
+    ]
+  }
+}

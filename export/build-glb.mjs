@@ -1,0 +1,205 @@
+// 가로챈 웹 모델링 기하(out/capture.*) + 지형 격자 + 층 자료 → 모바일용 campus.glb 하나와 크기 보고서.
+// 사용: node export/build-glb.mjs [서버=http://127.0.0.1:5291] [출력=native/assets/campus.glb]
+// 노드 이름 규칙(앱이 읽음):
+//   ground            지형(바닥 그림을 정점 색으로, 캠퍼스 밖 포함), 0.3 m 내려 구조물 바닥과 겹치지 않게
+//   structures        기단·계단·벽·캠퍼스 바닥(빛 없음, 웹과 같이 flat)
+//   surfaces          길 면(빛 없음)
+//   lines             길·구역 테두리 선
+//   b|<buildingId>    건물 하나(덩어리+창·지붕, 빛 받음). extras: { name, baseM, roofM }
+//   f|<buildingId>|<i> 층 판(처음엔 숨김). extras: { name, m, building }
+import fs from 'node:fs';
+import path from 'node:path';
+import earcut from '../vendor/tracker/node_modules/earcut/src/earcut.js';
+import { makeFrame } from './geo.mjs';
+
+const [server = 'http://127.0.0.1:5291', outFile = 'native/assets/campus.glb'] = process.argv.slice(2);
+const meta = JSON.parse(fs.readFileSync('out/capture.json', 'utf8'));
+const bin = fs.readFileSync('out/capture.bin');
+const [lon0, lat0] = meta.origin;
+const frame = makeFrame(lon0, lat0);
+const view = (ref, T) => (ref ? new T(bin.buffer, bin.byteOffset + ref[0], ref[1] / T.BYTES_PER_ELEMENT) : null);
+
+/** 메시 모음: 정점(float32 x,y,z — glTF 축), 법선(선택), 색(uint8 rgba), 색인 */
+class MeshBuilder {
+  constructor(mode = 4) { this.mode = mode; this.pos = []; this.nrm = []; this.col = []; this.idx = []; this.n = 0; this.hasNormals = null; }
+  add(pos, nrm, col, idx) {
+    const base = this.n, n = pos.length / 3;
+    for (let i = 0; i < n; i++) {
+      // 가로챈 좌표는 동·북·위 → glTF (동, 위, −북)
+      this.pos.push(pos[3 * i], pos[3 * i + 2], -pos[3 * i + 1]);
+      if (nrm) this.nrm.push(nrm[3 * i], nrm[3 * i + 2], -nrm[3 * i + 1]);
+      this.col.push(col(i));
+    }
+    if (idx) for (const k of idx) this.idx.push(base + k);
+    else for (let i = 0; i < n; i++) this.idx.push(base + i);
+    this.n += n;
+  }
+}
+
+const buildings = new Map();
+const structures = new MeshBuilder();
+const surfaces = new MeshBuilder();
+const lines = new MeshBuilder(1);
+const stats = { groups: meta.groups.length, skipped: 0 };
+for (const g of meta.groups) {
+  const pos = view(g.pos, Float32Array), nrm = view(g.nrm, Float32Array), col = view(g.col, Uint8Array), idx = view(g.idx, Uint32Array);
+  const ic = g.color ?? [200, 200, 200, 255];
+  const colour = col ? (i) => [col[4 * i], col[4 * i + 1], col[4 * i + 2], col[4 * i + 3]] : () => ic;
+  if (g.mode === 'strip') {
+    const segs = [];
+    for (let i = 0; i + 1 < g.n; i++) segs.push(i, i + 1);
+    lines.add(pos, null, colour, segs);
+    continue;
+  }
+  if (g.mode !== 'tri') { stats.skipped++; continue; }
+  const kind = g.id && typeof g.id === 'object' ? g.id.kind : null;
+  if (kind === 'building') {
+    const id = g.id.buildingId;
+    if (!buildings.has(id)) buildings.set(id, new MeshBuilder());
+    // 덩어리(법선 있음)와 창·지붕(법선 있음)을 한 메시로. 법선 없는 것이 섞이면 위쪽 법선.
+    const b = buildings.get(id);
+    b.add(pos, nrm ?? new Float32Array(g.n * 3).map((_, k) => (k % 3 === 2 ? 1 : 0)), colour, idx);
+  } else if (kind === 'structure') structures.add(pos, null, colour, idx);
+  else surfaces.add(pos, null, colour, idx);
+}
+
+// ---------- 지형: 격자(2 m) 를 4 m 로 솎아 바닥 그림을 입힘 ----------
+const res = await fetch(`${server}/api/v1/terrain/grid`);
+const grid = JSON.parse(res.headers.get('X-Grid'));
+const heights = new Float32Array(await res.arrayBuffer());
+const STEP = 2;
+// out/ground.rgba: 바닥 그림을 RGBA 로 푼 것(export/ground-rgba.py)
+const rgbaHead = JSON.parse(fs.readFileSync('out/ground.rgba.json', 'utf8'));
+const ground = { pos: [], uv: [], idx: [], image: { w: rgbaHead.w, h: rgbaHead.h, data: fs.readFileSync('out/ground.rgba') } };
+const [rw, rs, re, rn] = meta.ground.rect; // 라디안
+const cols = Math.floor((grid.width - 1) / STEP) + 1, rows = Math.floor((grid.height - 1) / STEP) + 1;
+for (let j = 0; j < rows; j++) {
+  for (let i = 0; i < cols; i++) {
+    const gi = i * STEP, gj = j * STEP;
+    const x = grid.originX + (gi + 0.5) * grid.resolution, y = grid.originY + (gj + 0.5) * grid.resolution;
+    const h = heights[gj * grid.width + gi] - 0.3;
+    const p = frame.fromTm(x, y, h);
+    ground.pos.push(...p);
+    // 바닥 그림의 경위도 사각형 안 위치(위쪽이 북)
+    const llx = (x - grid.originX) / (grid.width * grid.resolution), lly = (y - grid.originY) / (grid.height * grid.resolution);
+    ground.uv.push(llx, 1 - lly);
+  }
+}
+for (let j = 0; j + 1 < rows; j++) for (let i = 0; i + 1 < cols; i++) {
+  const a = j * cols + i, b = a + 1, c = a + cols, d = c + 1;
+  ground.idx.push(a, b, c, b, d, c);
+}
+void rw; void rs; void re; void rn;
+
+// ---------- 층 판(층 펼치기·한 층 보기용) ----------
+const scene = await (await fetch(`${server}/api/v1/scene`)).json();
+const floorMeshes = [];
+for (const b of scene.buildings) {
+  const w = b.appearance?.windows;
+  if (!w?.floorsM?.length) continue;
+  const tris = [];
+  for (const poly of b.geometry.coordinates) {
+    const flat = [], holes = [];
+    poly.forEach((ring, r) => { if (r) holes.push(flat.length / 2); for (const [lon, lat] of ring.slice(0, -1)) flat.push(lon, lat); });
+    const t = earcut(flat, holes);
+    tris.push({ flat, t, rings: poly });
+  }
+  w.floorsM.forEach((m, i) => {
+    if (m < b.baseM - 6 || m >= b.roofM) return;
+    const mb = new MeshBuilder();
+    for (const { flat, t, rings } of tris) {
+      const top = [];
+      for (let k = 0; k < flat.length; k += 2) top.push(...frame.fromLonLat(flat[k], flat[k + 1], m + 0.05));
+      // MeshBuilder 는 동·북·위 순 입력을 받으므로 되돌려 넣음
+      const enu = [];
+      for (let k = 0; k < top.length; k += 3) enu.push(top[k], -top[k + 2], top[k + 1]);
+      mb.add(enu, new Float32Array(enu.length).map((_, k) => (k % 3 === 2 ? 1 : 0)), () => [236, 240, 247, 255], t);
+      // 가장자리 띠(0.4 m)
+      for (const ring of rings) {
+        const pts = ring.map(([lon, lat]) => frame.fromLonLat(lon, lat, 0));
+        for (let k = 0; k + 1 < pts.length; k++) {
+          const [ax, , az] = pts[k], [bx, , bz] = pts[k + 1];
+          const quad = [ax, -az, m + 0.05, bx, -bz, m + 0.05, bx, -bz, m - 0.35, ax, -az, m - 0.35];
+          // 높이는 frame 의 위 성분(곡률 차 <2 cm, 무시)
+          const nx = bz - az, ny = bx - ax, len = Math.hypot(nx, ny) || 1;
+          mb.add(quad, new Float32Array([nx / len, ny / len, 0, nx / len, ny / len, 0, nx / len, ny / len, 0, nx / len, ny / len, 0]), () => [120, 132, 150, 255], [0, 1, 2, 0, 2, 3]);
+        }
+      }
+    }
+    floorMeshes.push({ name: `f|${b.buildingId}|${i}`, extras: { building: b.buildingId, name: w.floorNames?.[i] ?? `${i + 1}`, m }, mesh: mb });
+  });
+}
+
+// ---------- glTF 쓰기 ----------
+const gltf = { asset: { version: '2.0', generator: 'campus-3d-lab build-glb' }, scene: 0, scenes: [{ nodes: [] }], nodes: [], meshes: [], materials: [], accessors: [], bufferViews: [], buffers: [], extensionsUsed: ['KHR_materials_unlit'] };
+const parts = []; let byteLength = 0;
+function bufferView(typed, target) {
+  const b = Buffer.from(typed.buffer, typed.byteOffset, typed.byteLength);
+  const pad = (4 - (byteLength % 4)) % 4; if (pad) { parts.push(Buffer.alloc(pad)); byteLength += pad; }
+  gltf.bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: b.length, ...(target ? { target } : {}) });
+  parts.push(b); byteLength += b.length;
+  return gltf.bufferViews.length - 1;
+}
+function accessor(typed, type, componentType, count, extra = {}) {
+  gltf.accessors.push({ bufferView: bufferView(typed, extra.target), componentType, count, type, ...(extra.normalized ? { normalized: true } : {}), ...(extra.min ? { min: extra.min, max: extra.max } : {}) });
+  return gltf.accessors.length - 1;
+}
+const material = (name, unlit, opts = {}) => { gltf.materials.push({ name, pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 1, ...(opts.texture != null ? { baseColorTexture: { index: opts.texture } } : {}) }, ...(unlit ? { extensions: { KHR_materials_unlit: {} } } : {}), doubleSided: true }); return gltf.materials.length - 1; };
+const M_LIT = material('lit', false), M_UNLIT = material('unlit', true);
+function minmax(p) { const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity]; for (let i = 0; i < p.length; i += 3) for (let k = 0; k < 3; k++) { mn[k] = Math.min(mn[k], p[i + k]); mx[k] = Math.max(mx[k], p[i + k]); } return { min: mn, max: mx }; }
+const report = [];
+function addMesh(name, mb, mat, extras, hidden) {
+  if (!mb.n) return;
+  const p = new Float32Array(mb.pos);
+  const attributes = { POSITION: accessor(p, 'VEC3', 5126, mb.n, { target: 34962, ...minmax(p) }), COLOR_0: accessor(new Uint8Array(mb.col.flat()), 'VEC4', 5121, mb.n, { target: 34962, normalized: true }) };
+  if (mb.nrm.length) attributes.NORMAL = accessor(new Float32Array(mb.nrm), 'VEC3', 5126, mb.n, { target: 34962 });
+  const big = mb.n > 65535;
+  const indices = accessor(big ? new Uint32Array(mb.idx) : new Uint16Array(mb.idx), 'SCALAR', big ? 5125 : 5123, mb.idx.length, { target: 34963 });
+  gltf.meshes.push({ name, primitives: [{ attributes, indices, material: mat, mode: mb.mode }] });
+  gltf.nodes.push({ name, mesh: gltf.meshes.length - 1, ...(extras ? { extras: { ...extras, hidden: !!hidden } } : hidden ? { extras: { hidden: true } } : {}) });
+  gltf.scenes[0].nodes.push(gltf.nodes.length - 1);
+  report.push({ name, vertices: mb.n, triangles: mb.mode === 4 ? mb.idx.length / 3 : 0, bytes: mb.n * (12 + 4 + (mb.nrm.length ? 12 : 0)) + mb.idx.length * (big ? 4 : 2) });
+}
+// 지형: 바닥 그림을 정점 색으로 구움(앱의 GLTFLoader 가 그림 디코딩 없이 읽게 — RN 에는 Image/Blob URL 이 없음)
+{
+  const img = ground.image;
+  const p = new Float32Array(ground.pos), n = p.length / 3;
+  const col = new Uint8Array(n * 4);
+  for (let k = 0; k < n; k++) {
+    const u = Math.min(img.w - 1, Math.max(0, Math.round(ground.uv[2 * k] * (img.w - 1)))), v = Math.min(img.h - 1, Math.max(0, Math.round(ground.uv[2 * k + 1] * (img.h - 1))));
+    const o = (v * img.w + u) * 4;
+    col[4 * k] = img.data[o]; col[4 * k + 1] = img.data[o + 1]; col[4 * k + 2] = img.data[o + 2]; col[4 * k + 3] = 255;
+  }
+  const attributes = { POSITION: accessor(p, 'VEC3', 5126, n, { target: 34962, ...minmax(p) }), COLOR_0: accessor(col, 'VEC4', 5121, n, { target: 34962, normalized: true }) };
+  const big = n > 65535;
+  const indices = accessor(big ? new Uint32Array(ground.idx) : new Uint16Array(ground.idx), 'SCALAR', big ? 5125 : 5123, ground.idx.length, { target: 34963 });
+  gltf.meshes.push({ name: 'ground', primitives: [{ attributes, indices, material: M_UNLIT }] });
+  gltf.nodes.push({ name: 'ground', mesh: gltf.meshes.length - 1 }); gltf.scenes[0].nodes.push(gltf.nodes.length - 1);
+  report.push({ name: 'ground', vertices: n, triangles: ground.idx.length / 3, bytes: n * 16 + ground.idx.length * (big ? 4 : 2) });
+}
+addMesh('structures', structures, M_UNLIT);
+addMesh('surfaces', surfaces, M_UNLIT);
+addMesh('lines', lines, M_UNLIT);
+const sceneById = new Map(scene.buildings.map((b) => [b.buildingId, b]));
+for (const [id, mb] of buildings) { const b = sceneById.get(id); addMesh(`b|${id}`, mb, M_LIT, { id, name: b?.name ?? id, baseM: b?.baseM, roofM: b?.roofM }); }
+for (const f of floorMeshes) addMesh(f.name, f.mesh, M_LIT, f.extras, true);
+gltf.extras = { origin: meta.origin, grid: { originX: grid.originX, originY: grid.originY, resolution: grid.resolution, width: grid.width, height: grid.height }, frame: 'x=east, y=up(MSL m), z=-north; origin lon/lat at height 0', capturedFrom: 'client3d (feature/client3d 47b5531) + /api/v1/scene, /api/v1/terrain/grid' };
+gltf.buffers.push({ byteLength });
+
+const json = Buffer.from(JSON.stringify(gltf));
+const jsonPad = Buffer.alloc((4 - (json.length % 4)) % 4, 0x20);
+const binBuf = Buffer.concat(parts); const binPad = Buffer.alloc((4 - (binBuf.length % 4)) % 4);
+const total = 12 + 8 + json.length + jsonPad.length + 8 + binBuf.length + binPad.length;
+const header = Buffer.alloc(12); header.writeUInt32LE(0x46546c67, 0); header.writeUInt32LE(2, 4); header.writeUInt32LE(total, 8);
+const jh = Buffer.alloc(8); jh.writeUInt32LE(json.length + jsonPad.length, 0); jh.writeUInt32LE(0x4e4f534a, 4);
+const bh = Buffer.alloc(8); bh.writeUInt32LE(binBuf.length + binPad.length, 0); bh.writeUInt32LE(0x004e4942, 4);
+fs.mkdirSync(path.dirname(outFile), { recursive: true });
+fs.writeFileSync(outFile, Buffer.concat([header, jh, json, jsonPad, bh, binBuf, binPad]));
+const sum = (f) => report.filter(f).reduce((a, r) => ({ v: a.v + r.vertices, t: a.t + r.triangles, b: a.b + r.bytes }), { v: 0, t: 0, b: 0 });
+const summary = {
+  file: outFile, bytes: total, groupsIn: stats.groups, skipped: stats.skipped,
+  ground: sum((r) => r.name === 'ground'), structures: sum((r) => r.name === 'structures'), surfaces: sum((r) => r.name === 'surfaces'), lines: sum((r) => r.name === 'lines'),
+  buildings: { count: buildings.size, ...sum((r) => r.name.startsWith('b|')) }, floors: { count: floorMeshes.length, ...sum((r) => r.name.startsWith('f|')), maxBytes: Math.max(...report.filter((r) => r.name.startsWith('f|')).map((r) => r.bytes)) },
+};
+fs.writeFileSync('out/size-report.json', JSON.stringify({ summary, nodes: report }, null, 1));
+console.log(JSON.stringify(summary, null, 1));

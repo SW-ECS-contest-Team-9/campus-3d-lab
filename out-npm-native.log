@@ -1,0 +1,22 @@
+npm warn deprecated uuid@7.0.3: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+
+added 465 packages in 1m
+› Installing 1 SDK 57.0.0 compatible native module using npm
+> npm install
+
+up to date, audited 466 packages in 4s
+
+45 packages are looking for funding
+  run `npm fund` for details
+
+22 vulnerabilities (7 moderate, 15 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+› Added config plugin: expo-asset
+DONE
