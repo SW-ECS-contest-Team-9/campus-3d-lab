@@ -1,0 +1,80 @@
+--- a/src/ui/Map3D.tsx
++++ b/src/ui/Map3D.tsx
+@@ -12,7 +12,8 @@
+ import { CHARACTER_OK, CHARACTER_UNCERTAIN } from './characterImages';
+ import { color } from './components';
+ 
+-const READY_TIMEOUT_MS = 25_000;
++// S21 실기기 첫 표시 17 s(전체)·16 s(가벼운) 측정(2026-10-15, USB). 저사양·느린 망 여유를 두고 60 s.
++const READY_TIMEOUT_MS = 60_000;
+ type Status = 'loading' | 'ready' | 'failed';
+ interface Rect {
+   x: number;
+@@ -176,6 +177,11 @@
+                   onMessage={(e) => receive(e.nativeEvent.data)}
+                   onError={() => setStatus('failed')}
+                   onHttpError={() => setStatus('failed')}
++                  // GPU 렌더러가 죽으면(메모리·드라이버) 앱 전체가 죽지 않게 평면 지도로
++                  onRenderProcessGone={() => setStatus('failed')}
++                  androidLayerType="hardware"
++                  webviewDebuggingEnabled={__DEV__}
++                  setSupportMultipleWindows={false}
+                 />
+               </BlurTargetView>
+             )}
+--- a/src/map3d/embed.ts
++++ b/src/map3d/embed.ts
+@@ -138,7 +138,8 @@
+ /** 페이지 주소 + 가벼운 모드(light=1) + 페이지 자체 층 판 숨김(ui=min: 앱이 층 고르기를 보여 줄 때). */
+ export function pageUrl(base: string, light = false, minimal = false): string {
+   const u = base.trim() || DEFAULT_MAP3D_URL;
+-  const q = [light ? 'light=1' : '', minimal ? 'ui=min' : ''].filter(Boolean).join('&');
++  // 가벼운(tier 2): 구조물·이름표 빼고 MSAA 끔(FXAA) — client3d-android.patch 의 msaa 쿼리
++  const q = [light ? 'light=1&msaa=1' : '', minimal ? 'ui=min' : ''].filter(Boolean).join('&');
+   return q ? `${u}${u.includes('?') ? '&' : '?'}${q}` : u;
+ }
+ export const DEFAULT_MAP3D_URL = `http://${DEV_HOST}:5273/client3d.html`;
+--- a/src/map3d/embed.test.ts
++++ b/src/map3d/embed.test.ts
+@@ -55,8 +55,8 @@
+     expect(sceneBuildingId('b:은주관#2관')).toBe('은주관#2관');
+     expect(packagePlaceKey('abc')).toBe('p:abc');
+     expect(pageUrl('')).toBe('http://127.0.0.1:5273/client3d.html');
+-    expect(pageUrl('https://x/client3d.html', true)).toBe('https://x/client3d.html?light=1');
+-    expect(pageUrl('https://x/client3d.html?a=1', true, true)).toBe('https://x/client3d.html?a=1&light=1&ui=min');
++    expect(pageUrl('https://x/client3d.html', true)).toBe('https://x/client3d.html?light=1&msaa=1');
++    expect(pageUrl('https://x/client3d.html?a=1', true, true)).toBe('https://x/client3d.html?a=1&light=1&msaa=1&ui=min');
+   });
+ 
+   it('받은 사건: v 1 과 모양만 받음', () => {
+--- /dev/null
++++ b/src/map3d/tier.ts
+@@ -0,0 +1,13 @@
++// 3D 지도 기기 등급. 3D 페이지 ready 사건의 gpu(WebGL 렌더러 이름)로 고름(client3d-android.patch 가 보냄).
++// tier 1 = 전체 3D(Galaxy S21 급 이상), tier 2 = 가벼운 3D(S10·S20·A5x 급), tier 3 = 평면 지도(WebGL2 없음·연속 실패).
++export type Tier = 1 | 2 | 3;
++
++/** S21(Mali-G78 / Adreno 660) 이상: Mali-G78·G710 이후·Immortalis, Xclipse(S22+ Exynos), Adreno 66x·7xx·8xx */
++const TIER1 = /Mali-G(78|7[1-9]0|6[2-9]5|9\d\d)|Immortalis|Xclipse|Adreno \(TM\) (6[6-9]\d|[7-9]\d\d)/i;
++
++export function gpuTier(gpu: string | null | undefined, failures = 0): Tier {
++  if (failures >= 2) return 3;
++  if (!gpu) return 2;
++  if (/SwiftShader|llvmpipe|Software/i.test(gpu)) return 2;
++  return TIER1.test(gpu) ? 1 : 2;
++}
+--- /dev/null
++++ b/src/map3d/tier.test.ts
+@@ -0,0 +1,12 @@
++import { describe, expect, it } from 'vitest';
++import { gpuTier } from './tier';
++
++describe('gpuTier', () => {
++  it('S21 급 이상은 1', () => {
++    for (const g of ['Mali-G78', 'Adreno (TM) 660', 'Samsung Xclipse 920', 'Adreno (TM) 740', 'Immortalis-G715', 'Mali-G710']) expect(gpuTier(g)).toBe(1);
++  });
++  it('S10·S20·A5x 급은 2', () => {
++    for (const g of ['Mali-G76', 'Mali-G77', 'Adreno (TM) 640', 'Adreno (TM) 650', 'Mali-G68', 'Adreno (TM) 618', 'Android Emulator OpenGL ES Translator (Google SwiftShader)', '']) expect(gpuTier(g)).toBe(2);
++  });
++  it('연속 두 번 실패하면 3(평면)', () => expect(gpuTier('Mali-G78', 2)).toBe(3));
++});
