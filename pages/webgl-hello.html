@@ -1,0 +1,10 @@
+<!doctype html><meta name="viewport" content="width=device-width"><body style="margin:0;background:#fff"><canvas id=c width=360 height=360></canvas><pre id=o></pre>
+<script>
+const q=new URLSearchParams(location.search),v=q.get('gl')||'webgl2';
+const c=document.getElementById('c');const gl=c.getContext(v,{antialias:q.get('aa')!=='0'});
+const info={ver:v,ok:!!gl};
+if(gl){const d=gl.getExtension('WEBGL_debug_renderer_info');Object.assign(info,{attrs:gl.getContextAttributes(),maxTex:gl.getParameter(gl.MAX_TEXTURE_SIZE),renderer:d?gl.getParameter(d.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),vendor:d?gl.getParameter(d.UNMASKED_VENDOR_WEBGL):'',exts:gl.getSupportedExtensions().length,float:!!gl.getExtension('OES_texture_float')||v==='webgl2',idx32:v==='webgl2'||!!gl.getExtension('OES_element_index_uint'),depthTex:v==='webgl2'||!!gl.getExtension('WEBGL_depth_texture'),mem:performance.memory&&performance.memory.jsHeapSizeLimit});
+let t=0;(function f(){gl.clearColor(Math.abs(Math.sin(t+=.05)),.4,.8,1);gl.clear(gl.COLOR_BUFFER_BIT);requestAnimationFrame(f)})();}
+document.getElementById('o').textContent=JSON.stringify(info,null,1);console.log('WEBGL_INFO '+JSON.stringify(info));
+window.ReactNativeWebView&&ReactNativeWebView.postMessage(JSON.stringify({type:'ready',info}));
+</script>
