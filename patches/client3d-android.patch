@@ -1,0 +1,36 @@
+diff --git a/frontend/src/campus-map.ts b/frontend/src/campus-map.ts
+index 64b2abc..f8bfdd5 100644
+--- a/frontend/src/campus-map.ts
++++ b/frontend/src/campus-map.ts
+@@ -448,7 +448,14 @@ export async function initCampusMap(containerId: string): Promise<{
+     selectionIndicator: false,
+     scene3DOnly: true,
+     requestRenderMode: false,
++    // Android: ?msaa=1 끄기(에뮬레이터 SwiftShader 는 MSAA 4 에서 화면이 검정, 저사양 GPU 비용↓). 기본 4(Cesium 기본값).
++    msaaSamples: Math.max(1, Number(new URLSearchParams(location.search).get('msaa') ?? 4) || 4),
+   });
++  // MSAA 를 끄면 가장자리 계단을 FXAA 로(값싼 후처리)
++  if (viewer.scene.msaaSamples === 1) viewer.scene.postProcessStages.fxaa.enabled = true;
++  // ?res=N: 그리기 해상도 배율(기본 = 브라우저 권장, 고밀도 화면에서 CSS px). 예: res=1.5 는 더 또렷·더 무거움
++  const res = Number(new URLSearchParams(location.search).get('res'));
++  if (res > 0 && res <= 3) { viewer.useBrowserRecommendedResolution = false; viewer.resolutionScale = res / (window.devicePixelRatio || 1); }
+   const scene = viewer.scene;
+   scene.skyBox.show = false;
+   scene.skyAtmosphere.show = false;
+diff --git a/frontend/src/client3d-main.ts b/frontend/src/client3d-main.ts
+index 8b26d94..620ca2a 100644
+--- a/frontend/src/client3d-main.ts
++++ b/frontend/src/client3d-main.ts
+@@ -410,7 +410,11 @@ async function boot() {
+   await Promise.all(loads);
+   status(null);
+   if (import.meta.env.DEV) (window as any).__c3d = { tmInverse, tmForward, viewer, layers, level, scene, run, home, setFloorView };
+-  emit({ type: 'ready', buildings: level.buildingList(), light });
++  // 앱이 기기 등급(tier)을 고르도록 GPU 이름과 불러오기 시간을 함께 보냄(받는 쪽이 모르면 무시)
++  const gl = viewer.scene.context._gl as WebGL2RenderingContext;
++  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
++  const gpu = String(dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
++  emit({ type: 'ready', buildings: level.buildingList(), light, gpu, loadMs: Math.round(performance.now()), msaa: viewer.scene.msaaSamples } as any);
+ }
+ 
+ void boot();
