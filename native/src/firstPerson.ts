@@ -40,6 +40,8 @@ export interface FpHost {
   hide: THREE.Object3D[];
   /** 실내에 있을 때 숨길 바깥 층(지형·구조물·길 면·선): 실내 바닥보다 높은 바깥 바닥이 앞을 가림 */
   outdoor: THREE.Object3D[];
+  /** 바깥 길 점의 발 높이: 경로 높이가 구조물·길 면 윗면보다 조금 낮으면(인도 턱 등) 윗면으로(0.4 m 안만: 더 높으면 화단·벽 윗면이라 무시) */
+  surfaceTops?: (pts: THREE.Vector3[]) => (number | null)[];
 }
 export interface FpStep { kind: string; floorChange: boolean; toFloor: string | null }
 export interface Hud { text: string; sub: string; floor: string | null; turn: 'left' | 'right' | 'up' | 'down' | 'arrive' | null; distM: number | null }
@@ -147,7 +149,15 @@ export function createFirstPerson(host: FpHost, onHud?: (h: Hud) => void) {
   function start(points: number[][], steps: FpStep[] = [], opts: { speed?: number } = {}) {
     stop();
     pts = [];
-    for (const [x, y, z] of points) { const v = host.fromTm(x, y, z); if (!pts.length || pts[pts.length - 1].distanceTo(v) > 0.01) pts.push(v); }
+    const raw = points.map(([x, y, z]) => host.fromTm(x, y, z));
+    const tops = host.surfaceTops?.(raw) ?? [];
+    raw.forEach((v, k) => {
+      const t = host.toTm(v);
+      const indoor = host.interiors.some((i) => Math.abs(i.m - v.y) < 0.7 && inRings(t.x, t.y, i.rings));
+      const top = tops[k];
+      if (!indoor && top != null && top > v.y) v.y = top;
+      if (!pts.length || pts[pts.length - 1].distanceTo(v) > 0.01) pts.push(v);
+    });
     if (pts.length < 2) return false;
     cum = [0];
     for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]));

@@ -273,7 +273,39 @@ export async function createCampusScene(o: SceneOptions) {
   }
 
   // ---------- 1인칭 안내(시험) ----------
-  const fp = createFirstPerson({ scene, camera, fromTm, toTm, buildings: [...buildings.values()].map((b) => b.node), interiors, hide: [routeGroup, here], outdoor: [layer.ground, layer.structures, layer.surfaces, layer.lines].filter(Boolean) as THREE.Object3D[] }, o.onHud);
+  // 경로 점마다 발밑 윗면(구조물·길 면·지형): 삼각형을 한 번만 훑고 경로 점이 있는 2 m 칸만 봄(점마다 광선을 쏘면 Hermes 에서 28 s)
+  const surfaceTops = (pts: THREE.Vector3[]) => {
+    const C = 2, key = (x: number, z: number) => Math.floor(x / C) * 100003 + Math.floor(z / C);
+    const cells = new Map<number, number[]>();
+    pts.forEach((p, i) => { const k = key(p.x, p.z); const a = cells.get(k); if (a) a.push(i); else cells.set(k, [i]); });
+    const out: (number | null)[] = pts.map(() => null);
+    for (const obj of groundTargets) obj.traverse((m: any) => {
+      if (!m.isMesh) return;
+      const P = m.geometry.attributes.position.array as ArrayLike<number>, I = m.geometry.index?.array as ArrayLike<number> | undefined;
+      const n = I ? I.length : P.length / 3;
+      for (let t = 0; t < n; t += 3) {
+        const i0 = (I ? I[t] : t) * 3, i1 = (I ? I[t + 1] : t + 1) * 3, i2 = (I ? I[t + 2] : t + 2) * 3;
+        const ax = P[i0], az = P[i0 + 2], bx = P[i1], bz = P[i1 + 2], cx = P[i2], cz = P[i2 + 2];
+        const x0 = Math.floor(Math.min(ax, bx, cx) / C), x1 = Math.floor(Math.max(ax, bx, cx) / C), z0 = Math.floor(Math.min(az, bz, cz) / C), z1 = Math.floor(Math.max(az, bz, cz) / C);
+        if ((x1 - x0 + 1) * (z1 - z0 + 1) > 4000) continue;
+        const d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
+        if (Math.abs(d) < 1e-9) continue; // 벽(세로 면)
+        for (let gx = x0; gx <= x1; gx++) for (let gz = z0; gz <= z1; gz++) {
+          const list = cells.get(gx * 100003 + gz);
+          if (!list) continue;
+          for (const i of list) {
+            const p = pts[i];
+            const w0 = ((bz - cz) * (p.x - cx) + (cx - bx) * (p.z - cz)) / d, w1 = ((cz - az) * (p.x - cx) + (ax - cx) * (p.z - cz)) / d, w2 = 1 - w0 - w1;
+            if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+            const y = w0 * P[i0 + 1] + w1 * P[i1 + 1] + w2 * P[i2 + 1];
+            if (y > p.y - 0.5 && y < p.y + 0.4 && (out[i] === null || y > out[i]!)) out[i] = y;
+          }
+        }
+      }
+    });
+    return out;
+  };
+  const fp = createFirstPerson({ scene, camera, fromTm, toTm, surfaceTops, buildings: [...buildings.values()].map((b) => b.node), interiors, hide: [routeGroup, here], outdoor: [layer.ground, layer.structures, layer.surfaces, layer.lines].filter(Boolean) as THREE.Object3D[] }, o.onHud);
   let lastT = 0;
   const firstPerson = {
     start: (route: { points: number[][]; steps?: FpStep[] }, opts: { speed?: number } = {}) => { const ok = fp.start(route.points, route.steps ?? [], opts); lastT = 0; dirty(); return ok; },

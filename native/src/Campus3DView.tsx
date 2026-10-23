@@ -79,7 +79,7 @@ export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function C
   const firstPerson = useCallback((route: { points: number[][]; steps?: FpStep[] } | null, opts?: { speed?: number }) => {
     const s = sceneRef.current;
     if (!s) return;
-    if (route) s.firstPerson.start(route, opts); else s.firstPerson.stop();
+    if (route) { const t0 = Date.now(); s.firstPerson.start(route, opts); stat(`FP_START ${Date.now() - t0} ms ${route.points.length} pts`); } else s.firstPerson.stop();
   }, []);
   useImperativeHandle(ref, () => ({ post, firstPerson }), [post, firstPerson]);
 
