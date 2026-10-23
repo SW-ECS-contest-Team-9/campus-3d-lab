@@ -2,6 +2,7 @@
 // 자료: export/build-glb.mjs 가 만든 campus.glb(웹 모델링을 그대로 구운 것). 명령·사건은 client3d 메시지 형식 v1 과 같음.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { createFirstPerson, type FpStep, type Hud } from './firstPerson';
 import { makeFrame, tmForward } from './geo';
 import { matchFloor, parseCommand, PROTOCOL_VERSION, type Command, type PageEvent } from './protocol';
 
@@ -23,6 +24,8 @@ export interface SceneOptions {
   emit: Emit;
   light?: boolean;
   now?: () => number;
+  /** 1인칭 안내 글(시험) */
+  onHud?: (h: Hud) => void;
 }
 
 export async function createCampusScene(o: SceneOptions) {
@@ -67,6 +70,9 @@ export async function createCampusScene(o: SceneOptions) {
     b.floors.push({ m: n.userData.m, name: n.userData.name, node: meshOf(n) });
   }
   for (const b of buildings.values()) b.floors.sort((a, c) => a.m - c.m);
+  // 실내 빈 곳(i| 노드, 1인칭용): 처음엔 숨김
+  const interiors: { node: THREE.Mesh; m: number; floor: string; rings: number[][][] }[] = [];
+  root.traverse((n) => { if (n.userData?.interior && !interiors.some((i) => i.node === meshOf(n))) { const m = meshOf(n); m.visible = false; n.visible = false; interiors.push({ node: n as THREE.Mesh, m: n.userData.m, floor: n.userData.floor, rings: n.userData.rings }); } });
   // 블록(예: '한림관#고리')은 기본 건물('한림관')에 딸림 — 펼치기·비침·고르기를 함께
   const baseId = (id: string) => id.split('#')[0];
   const blocksOf = (id: string) => [...buildings.values()].filter((b) => baseId(b.id) === id);
@@ -266,6 +272,16 @@ export async function createCampusScene(o: SceneOptions) {
     }
   }
 
+  // ---------- 1인칭 안내(시험) ----------
+  const fp = createFirstPerson({ scene, camera, fromTm, toTm, buildings: [...buildings.values()].map((b) => b.node), interiors, hide: [routeGroup, here], outdoor: [layer.ground, layer.structures, layer.surfaces, layer.lines].filter(Boolean) as THREE.Object3D[] }, o.onHud);
+  let lastT = 0;
+  const firstPerson = {
+    start: (route: { points: number[][]; steps?: FpStep[] }, opts: { speed?: number } = {}) => { const ok = fp.start(route.points, route.steps ?? [], opts); lastT = 0; dirty(); return ok; },
+    stop: () => { fp.stop(); applyLight(); dirty(); },
+    seek: (s: number) => { fp.seek(s); dirty(); },
+    setPaused: fp.setPaused, setSpeed: fp.setSpeed, info: fp.info, active: fp.active,
+  };
+
   // ---------- 손 조작(앱·미리보기가 부름) ----------
   function pan(dx: number, dy: number) {
     // 화면 1 px 이 목표 지점 깊이에서 몇 m 인지
@@ -282,6 +298,13 @@ export async function createCampusScene(o: SceneOptions) {
   function resize(w: number, h: number) { o.width = w; o.height = h; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h, false); dirty(); }
   /** 그릴 것이 있으면 그리고 true. 앱의 rAF 고리가 매 프레임 부름. */
   function frameTick() {
+    if (fp.active()) {
+      const t = now() / 1000;
+      fp.tick(lastT ? t - lastT : 0);
+      lastT = t;
+      renderer.render(scene, camera);
+      return true;
+    }
     if (!needs) return false;
     needs = false;
     applyCamera();
@@ -293,7 +316,7 @@ export async function createCampusScene(o: SceneOptions) {
   resize(o.width, o.height);
   const info = () => ({ ...renderer.info.render, geometries: renderer.info.memory.geometries });
   emit({ type: 'ready', buildings: [...buildings.values()].filter((b) => baseId(b.id) === b.id).map((b) => ({ id: b.id, name: b.name })), light });
-  return { command, frameTick, resize, pan, zoom, rotate, tilt, tap, home, markerScreen, info, resumeFollow: () => { follow.paused = false; } };
+  return { command, frameTick, resize, pan, zoom, rotate, tilt, tap, home, markerScreen, info, firstPerson, resumeFollow: () => { follow.paused = false; } };
 }
 
 export type CampusScene = Awaited<ReturnType<typeof createCampusScene>>;
