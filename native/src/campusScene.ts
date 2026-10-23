@@ -2,7 +2,7 @@
 // 자료: export/build-glb.mjs 가 만든 campus.glb(웹 모델링을 그대로 구운 것). 명령·사건은 client3d 메시지 형식 v1 과 같음.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { createFirstPerson, type FpStep, type Hud } from './firstPerson';
+import { createFirstPerson, scanSurfaces, type FpStep, type Hud } from './firstPerson';
 import { makeFrame, tmForward } from './geo';
 import { matchFloor, parseCommand, PROTOCOL_VERSION, type Command, type PageEvent } from './protocol';
 
@@ -24,7 +24,7 @@ export interface SceneOptions {
   emit: Emit;
   light?: boolean;
   now?: () => number;
-  /** 1인칭 안내 글(시험) */
+  /** 1인칭 안내 글(사건 firstPerson 에도 실림) */
   onHud?: (h: Hud) => void;
 }
 
@@ -257,8 +257,11 @@ export async function createCampusScene(o: SceneOptions) {
     switch (c.type) {
       case 'setLocation': setLocation(c); break;
       case 'clearLocation': loc = null; here.visible = false; dirty(); break;
-      case 'setRoute': setRoute(c.points, c.floorChanges); break;
-      case 'clearRoute': clearRoute(); break;
+      case 'setRoute': setRoute(c.points, c.floorChanges); fpRoute = { points: c.points, steps: c.steps }; if (fp.active()) fpCommand({ type: 'firstPerson', on: true, speed: null, paused: null, follow: fp.progress().follow }); break;
+      case 'clearRoute': clearRoute(); fpRoute = null; if (fp.active()) fpCommand({ type: 'firstPerson', on: false, speed: null, paused: null, follow: false }); break;
+      case 'firstPerson': fpCommand(c); break;
+      case 'firstPersonSeek': firstPerson.seek(c.m); break;
+      case 'firstPersonFollow': firstPerson.follow(c.m); break;
       case 'focus': { const v = fromTm(c.x, c.y, c.z ?? 0); if (c.z === null) v.y = groundAt(v.x, v.z); cam.target.copy(v); cam.dist = 140; follow.paused = true; if (c.building) setFloorView(c.building, c.floor, true); dirty(); break; }
       case 'setFloor': {
         setFloorView(c.building, c.floor, c.explode);
@@ -272,46 +275,50 @@ export async function createCampusScene(o: SceneOptions) {
     }
   }
 
-  // ---------- 1인칭 안내(시험) ----------
-  // 경로 점마다 발밑 윗면(구조물·길 면·지형): 삼각형을 한 번만 훑고 경로 점이 있는 2 m 칸만 봄(점마다 광선을 쏘면 Hermes 에서 28 s)
-  const surfaceTops = (pts: THREE.Vector3[]) => {
-    const C = 2, key = (x: number, z: number) => Math.floor(x / C) * 100003 + Math.floor(z / C);
-    const cells = new Map<number, number[]>();
-    pts.forEach((p, i) => { const k = key(p.x, p.z); const a = cells.get(k); if (a) a.push(i); else cells.set(k, [i]); });
-    const out: (number | null)[] = pts.map(() => null);
-    for (const obj of groundTargets) obj.traverse((m: any) => {
-      if (!m.isMesh) return;
-      const P = m.geometry.attributes.position.array as ArrayLike<number>, I = m.geometry.index?.array as ArrayLike<number> | undefined;
-      const n = I ? I.length : P.length / 3;
-      for (let t = 0; t < n; t += 3) {
-        const i0 = (I ? I[t] : t) * 3, i1 = (I ? I[t + 1] : t + 1) * 3, i2 = (I ? I[t + 2] : t + 2) * 3;
-        const ax = P[i0], az = P[i0 + 2], bx = P[i1], bz = P[i1 + 2], cx = P[i2], cz = P[i2 + 2];
-        const x0 = Math.floor(Math.min(ax, bx, cx) / C), x1 = Math.floor(Math.max(ax, bx, cx) / C), z0 = Math.floor(Math.min(az, bz, cz) / C), z1 = Math.floor(Math.max(az, bz, cz) / C);
-        if ((x1 - x0 + 1) * (z1 - z0 + 1) > 4000) continue;
-        const d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
-        if (Math.abs(d) < 1e-9) continue; // 벽(세로 면)
-        for (let gx = x0; gx <= x1; gx++) for (let gz = z0; gz <= z1; gz++) {
-          const list = cells.get(gx * 100003 + gz);
-          if (!list) continue;
-          for (const i of list) {
-            const p = pts[i];
-            const w0 = ((bz - cz) * (p.x - cx) + (cx - bx) * (p.z - cz)) / d, w1 = ((cz - az) * (p.x - cx) + (ax - cx) * (p.z - cz)) / d, w2 = 1 - w0 - w1;
-            if (w0 < 0 || w1 < 0 || w2 < 0) continue;
-            const y = w0 * P[i0 + 1] + w1 * P[i1 + 1] + w2 * P[i2 + 1];
-            if (y > p.y - 0.5 && y < p.y + 0.4 && (out[i] === null || y > out[i]!)) out[i] = y;
-          }
-        }
-      }
-    });
-    return out;
-  };
-  const fp = createFirstPerson({ scene, camera, fromTm, toTm, surfaceTops, buildings: [...buildings.values()].map((b) => b.node), interiors, hide: [routeGroup, here], outdoor: [layer.ground, layer.structures, layer.surfaces, layer.lines].filter(Boolean) as THREE.Object3D[] }, o.onHud);
-  let lastT = 0;
+  // ---------- 1인칭 미리 걷기(firstPerson.ts) ----------
+  // 마지막 setRoute 경로(점·단계)를 눈높이로 걸음. 명령 firstPerson(on·speed·paused)·firstPersonSeek, 사건 firstPerson(진행·안내 글, 4번/s 안팎).
+  type FpRoute = { points: number[][]; steps: FpStep[] };
+  let fpRoute: FpRoute | null = null;
+  let fpStarted: FpRoute | null = null;
+  let lastHud: Hud | null = null;
+  const fp = createFirstPerson({
+    scene, camera, fromTm, toTm,
+    surfaces: (pts) => scanSurfaces(groundTargets, pts),
+    buildings: [...buildings.values()].map((b) => b.node), interiors, hide: [routeGroup, here],
+    outdoor: [layer.ground, layer.structures, layer.surfaces, layer.lines].filter(Boolean) as THREE.Object3D[],
+  }, (h) => { lastHud = h; o.onHud?.(h); fpEmit(true); });
+  let lastT = 0, fpSentAt = 0, fpSentKey = '';
+  function fpEmit(force = false) {
+    const p = fp.progress();
+    const state = !fp.active() ? 'off' : p.done ? 'done' : p.playing ? 'playing' : 'paused';
+    const key = `${state}|${p.speed}|${p.follow}|${lastHud?.text}|${lastHud?.sub}`;
+    if (!force && key === fpSentKey && now() - fpSentAt < 250) return;
+    fpSentKey = key; fpSentAt = now();
+    const h = fp.active() ? lastHud : null;
+    emit({ type: 'firstPerson', state, s: Math.round(p.s * 10) / 10, total: Math.round(p.total * 10) / 10, speed: p.speed, follow: p.follow, text: h?.text ?? null, sub: h?.sub ?? null, floor: h?.floor ?? null, turn: h?.turn ?? null });
+  }
+  function fpCommand(c: Extract<Command, { type: 'firstPerson' }>) {
+    if (!c.on) { if (fp.active()) { fp.stop(); applyLight(); fpStarted = null; fpEmit(true); } dirty(); return; }
+    if (!fpRoute) { emit({ type: 'error', error: '1인칭: 경로가 없음(setRoute 먼저)', command: 'firstPerson' }); return; }
+    if (!fp.active() || fpStarted !== fpRoute || fp.progress().follow !== c.follow) {
+      const t0 = now();
+      if (!fp.start(fpRoute.points, fpRoute.steps, { speed: c.speed ?? 1, paused: c.paused ?? false, follow: c.follow })) { emit({ type: 'error', error: '1인칭: 경로 점이 모자람', command: 'firstPerson' }); return; }
+      fpStarted = fpRoute; lastT = 0;
+      console.log(`FP_START ${now() - t0} ms ${fpRoute.points.length} pts`);
+    }
+    if (c.speed !== null) fp.setSpeed(c.speed);
+    if (c.paused !== null) fp.setPaused(c.paused);
+    fpEmit(true);
+    dirty();
+  }
   const firstPerson = {
-    start: (route: { points: number[][]; steps?: FpStep[] }, opts: { speed?: number } = {}) => { const ok = fp.start(route.points, route.steps ?? [], opts); lastT = 0; dirty(); return ok; },
-    stop: () => { fp.stop(); applyLight(); dirty(); },
-    seek: (s: number) => { fp.seek(s); dirty(); },
-    setPaused: fp.setPaused, setSpeed: fp.setSpeed, info: fp.info, active: fp.active,
+    start: (route: { points: number[][]; steps?: FpStep[] }, opts: { speed?: number; paused?: boolean; follow?: boolean } = {}) => { fpRoute = { points: route.points, steps: route.steps ?? [] }; fpCommand({ type: 'firstPerson', on: true, speed: opts.speed ?? null, paused: opts.paused ?? null, follow: !!opts.follow }); return fp.active(); },
+    stop: () => fpCommand({ type: 'firstPerson', on: false, speed: null, paused: null, follow: false }),
+    /** 따라가기 목표(m). 지금보다 8 m 넘게 뒤면 바로 옮김(되돌아감), 조금 뒤면 그 자리 */
+    follow: (m: number | null) => { const p = fp.progress(); if (m != null && m < p.s - 8) fp.seek(m); fp.setTarget(m); fpEmit(true); dirty(); },
+    seek: (s: number) => { fp.seek(s); fpEmit(true); dirty(); },
+    setPaused: (p: boolean) => { fp.setPaused(p); fpEmit(true); }, setSpeed: (k: number) => { fp.setSpeed(k); fpEmit(true); },
+    info: fp.info, active: fp.active, progress: fp.progress, pose: fp.pose,
   };
 
   // ---------- 손 조작(앱·미리보기가 부름) ----------
@@ -335,6 +342,7 @@ export async function createCampusScene(o: SceneOptions) {
       fp.tick(lastT ? t - lastT : 0);
       lastT = t;
       renderer.render(scene, camera);
+      fpEmit();
       return true;
     }
     if (!needs) return false;

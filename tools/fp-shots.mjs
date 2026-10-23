@@ -1,11 +1,11 @@
 // 1인칭 안내 갈무리·시간 재기(PC headless Chrome, 화면에 안 띄움).
-// 사용: node tools/fp-shots.mjs <경로 fixture> <출력 폴더> [간격 m=2] [gpu=1]
+// 사용: node tools/fp-shots.mjs <경로 fixture> <출력 폴더> [간격 m=2] [gpu=1] [자리 목록 m: '200,290'(주면 간격 대신)]
 //   - 경로를 1인칭으로 시작해 간격마다 seek → 갈무리(출력/NNN.png, 360x800 dpr 2)
 //   - 끝나고 실제 시간으로 1배속 12 s 걸으며 프레임 간격(p50·p95) → 출력/frames.json
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 
-const [fixture, outDir, every = '2', gpu = '1'] = process.argv.slice(2);
+const [fixture, outDir, every = '2', gpu = '1', list = ''] = process.argv.slice(2);
 const url = 'http://127.0.0.1:5292/out/preview/index.html';
 const port = 9464;
 fs.mkdirSync(outDir, { recursive: true });
@@ -38,7 +38,8 @@ await ev(`__s.firstPerson.start(${JSON.stringify({ points: route.points, steps: 
 const info = await ev('__s.firstPerson.info()');
 console.log(JSON.stringify(info));
 const shots = [];
-for (let s = 0, k = 0; s <= info.total + 0.01; s += +every, k++) {
+const at = list ? list.split(',').map(Number) : Array.from({ length: Math.floor(info.total / +every) + 1 }, (_, k) => k * +every);
+for (const s of at) {
   // 층 바뀜 구간 안(가려진 자리)은 건너뜀
   if (info.transitions.some((t) => s > t.s0 + 0.05 && s < t.s1 - 0.05)) continue;
   await ev(`__s.firstPerson.seek(${s}), true`);

@@ -44,6 +44,8 @@ test('실내 i|: 숨김, 층 높이·바깥선 있음, 한 층 64 KB 미만, 단
     assert.ok(a.min[1] > n.extras.m - 0.5 && a.max[1] < n.extras.m + 3, `${n.name} y ${a.min[1]}..${a.max[1]}`);
     const bytes = Object.values(p.attributes).concat([p.indices]).reduce((s2, i) => s2 + gltf.bufferViews[gltf.accessors[i].bufferView].byteLength, 0);
     assert.ok(bytes < 64 * 1024, `${n.name} ${bytes}`);
+    // 정점 합침(export/weld-interiors.mjs): 색인이 정점보다 많아야 함(삼각형마다 3점이면 같음)
+    assert.ok(gltf.accessors[p.indices].count > a.count, `${n.name} 정점 ${a.count} 색인 ${gltf.accessors[p.indices].count}`);
   }
 });
 

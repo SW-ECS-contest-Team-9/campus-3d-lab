@@ -1,6 +1,7 @@
 // 사용자용 3D 페이지(client3d.html)의 끼워 넣기 메시지 형식 v1. 브라우저·Cesium 에 의존하지 않음(시험 가능).
-// 받는 명령: setLocation, clearLocation, setRoute, clearRoute, focus, setFloor, setMarkerImages, setMode.
-// 보내는 사건: ready, pick, cameraChanged, floorChanged, error. 모든 메시지에 v: 1.
+// 받는 명령: setLocation, clearLocation, setRoute, clearRoute, focus, setFloor, setMarkerImages, setMode,
+//   firstPerson·firstPersonSeek·firstPersonFollow(네이티브 3D 만: 마지막 setRoute 경로를 1인칭으로 미리 걷기·걸으며 따라가기).
+// 보내는 사건: ready, pick, cameraChanged, floorChanged, error, firstPerson(네이티브 3D 만). 모든 메시지에 v: 1.
 // 좌표: 경로·focus 는 EPSG:5186 [x, y, z(MSL m)], 위치는 WGS84 lon/lat + z(MSL m).
 
 export const PROTOCOL_VERSION = 1;
@@ -11,23 +12,32 @@ export type FloorRef = string | null;
 export type Command =
   | { type: 'setLocation'; lon: number; lat: number; z: number | null; accuracyM: number; floor: FloorRef; building: string | null; state: 'ok' | 'uncertain'; markerUrl: string | null }
   | { type: 'clearLocation' }
-  | { type: 'setRoute'; points: Xyz[]; floorChanges: { at: Xyz; label: string | null }[] }
+  | { type: 'setRoute'; points: Xyz[]; floorChanges: { at: Xyz; label: string | null }[]; steps: RouteStepRef[] }
   | { type: 'clearRoute' }
+  | { type: 'firstPerson'; on: boolean; speed: number | null; paused: boolean | null; follow: boolean }
+  | { type: 'firstPersonSeek'; m: number }
+  | { type: 'firstPersonFollow'; m: number | null }
   | { type: 'focus'; x: number; y: number; z: number | null; building: string | null; floor: FloorRef }
   | { type: 'setFloor'; building: string; floor: FloorRef; explode: boolean }
   | { type: 'setMarkerImages'; ok: string; uncertain: string }
   | { type: 'setMode'; light: boolean | null; ui: 'min' | 'full' | null };
+
+/** 경로 단계(1인칭 층 바뀜 종류·층 이름용, 선택) */
+export interface RouteStepRef { kind: string; floorChange: boolean; toFloor: string | null }
+export type FirstPersonState = 'playing' | 'paused' | 'done' | 'off';
+export type FirstPersonTurn = 'left' | 'right' | 'up' | 'down' | 'arrive' | null;
 
 export type PageEvent =
   | { v: 1; type: 'ready'; buildings: { id: string; name: string }[]; light: boolean }
   | { v: 1; type: 'pick'; kind: 'building' | 'place' | 'point'; id?: string; name?: string; x: number; y: number; z: number }
   | { v: 1; type: 'cameraChanged'; x: number; y: number; heightM: number; headingDeg: number; pitchDeg: number }
   | { v: 1; type: 'floorChanged'; building: string | null; floor: string | null; explode: boolean }
-  | { v: 1; type: 'error'; error: string; command?: string };
+  | { v: 1; type: 'error'; error: string; command?: string }
+  | { v: 1; type: 'firstPerson'; state: FirstPersonState; s: number; total: number; speed: number; follow: boolean; text: string | null; sub: string | null; floor: string | null; turn: FirstPersonTurn };
 
 export type Parsed = { ok: true; command: Command } | { ok: false; error: string; command?: string };
 
-const LIMITS = { routePoints: 5000, floorChanges: 200, text: 80, dataUrlBytes: 2_000_000, accuracyM: 5000 };
+const LIMITS = { routePoints: 5000, floorChanges: 200, steps: 500, speed: 3, text: 80, dataUrlBytes: 2_000_000, accuracyM: 5000 };
 // 서경대 둘레보다 넉넉한 EPSG:5186 상자(잘못된 좌표계로 보낸 값을 막는 정도)
 const TM_BOX = { minX: 150_000, maxX: 260_000, minY: 500_000, maxY: 620_000 };
 
@@ -97,7 +107,14 @@ export function parseCommand(raw: unknown): Parsed {
           need(Number.isFinite(at[2]), `floorChanges[${i}].at: z 필요`);
           return { at, label: optText((c as Record<string, unknown>).label, `floorChanges[${i}].label`) };
         });
-        return { ok: true, command: { type, points, floorChanges } };
+        const st = data.steps ?? [];
+        need(Array.isArray(st) && st.length <= LIMITS.steps, `steps: 배열(${LIMITS.steps}개 이하)`);
+        const steps = (st as unknown[]).map((x, i) => {
+          need(isObj(x) && text(x.kind) && typeof x.floorChange === 'boolean', `steps[${i}]: { kind, floorChange, toFloor? }`);
+          const r = x as Record<string, unknown>;
+          return { kind: r.kind as string, floorChange: r.floorChange as boolean, toFloor: optText(r.toFloor, `steps[${i}].toFloor`) };
+        });
+        return { ok: true, command: { type, points, floorChanges, steps } };
       }
       case 'focus': {
         need(num(data.x) && num(data.y), 'x, y: EPSG:5186 숫자');
@@ -109,6 +126,18 @@ export function parseCommand(raw: unknown): Parsed {
         need(data.explode === undefined || typeof data.explode === 'boolean', 'explode: true/false');
         return { ok: true, command: { type, building: data.building as string, floor: floorRef(data.floor, 'floor'), explode: data.explode === true } };
       }
+      case 'firstPerson':
+        need(typeof data.on === 'boolean', 'on: true/false');
+        need(data.speed === undefined || data.speed === null || (num(data.speed) && (data.speed as number) > 0 && (data.speed as number) <= LIMITS.speed), `speed: 0 초과 ${LIMITS.speed} 이하`);
+        need(data.paused === undefined || data.paused === null || typeof data.paused === 'boolean', 'paused: true/false');
+        need(data.follow === undefined || typeof data.follow === 'boolean', 'follow: true/false');
+        return { ok: true, command: { type, on: data.on as boolean, speed: (data.speed as number | undefined) ?? null, paused: (data.paused as boolean | undefined) ?? null, follow: data.follow === true } };
+      case 'firstPersonSeek':
+        need(num(data.m) && (data.m as number) >= 0, 'm: 0 이상 숫자(경로 처음부터 m)');
+        return { ok: true, command: { type, m: data.m as number } };
+      case 'firstPersonFollow':
+        need(data.m === null || (num(data.m) && (data.m as number) >= 0), 'm: 0 이상 숫자 또는 null(멈춤)');
+        return { ok: true, command: { type, m: data.m as number | null } };
       case 'setMarkerImages':
         need(imageUrl(data.ok) && imageUrl(data.uncertain), 'ok, uncertain: data:image 또는 http(s) 주소');
         return { ok: true, command: { type, ok: data.ok as string, uncertain: data.uncertain as string } };
