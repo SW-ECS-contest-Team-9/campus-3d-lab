@@ -1,0 +1,94 @@
+{
+ "n": 1440,
+ "p50": 8.300000071525574,
+ "p95": 8.5,
+ "max": 14,
+ "fps": 120.00100000737972,
+ "info": {
+  "s": 50.43360056877199,
+  "total": 335.102401465048,
+  "level": 0,
+  "levels": 3,
+  "transitions": [
+   {
+    "s0": 294.7,
+    "s1": 297.2,
+    "kind": "stairs",
+    "label": "계단으로 북악관 B1"
+   },
+   {
+    "s0": 319.3,
+    "s1": 335.1,
+    "kind": "elevator",
+    "label": "승강기로 북악관 6층"
+   }
+  ],
+  "turns": [
+   {
+    "s": 141.4,
+    "dir": "left",
+    "deg": 43
+   },
+   {
+    "s": 177.9,
+    "dir": "right",
+    "deg": 38
+   },
+   {
+    "s": 190.8,
+    "dir": "left",
+    "deg": 45
+   },
+   {
+    "s": 203,
+    "dir": "right",
+    "deg": 119
+   },
+   {
+    "s": 220,
+    "dir": "left",
+    "deg": 54
+   },
+   {
+    "s": 232,
+    "dir": "left",
+    "deg": 46
+   },
+   {
+    "s": 256.3,
+    "dir": "right",
+    "deg": 56
+   },
+   {
+    "s": 268.4,
+    "dir": "left",
+    "deg": 47
+   },
+   {
+    "s": 275.5,
+    "dir": "right",
+    "deg": 115
+   },
+   {
+    "s": 311.7,
+    "dir": "right",
+    "deg": 39
+   }
+  ],
+  "floor": null,
+  "phase": "walk",
+  "visible": {
+   "interiors": 0,
+   "buildingsHidden": 0
+  }
+ },
+ "render": {
+  "frame": 5594,
+  "calls": 18,
+  "triangles": 338612,
+  "points": 0,
+  "lines": 5074,
+  "geometries": 49
+ },
+ "gl": "ANGLE (AMD, AMD Radeon RX 7900 XTX (0x0000744C) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+}

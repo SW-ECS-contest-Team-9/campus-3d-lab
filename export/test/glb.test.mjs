@@ -32,6 +32,23 @@ test('노드 이름 규칙: ground·structures·surfaces·건물 b|·층 f|(숨�
   for (const n of f) { assert.equal(n.extras.hidden, true); assert.ok(Number.isFinite(n.extras.m)); assert.ok(gltf.nodes.some((x) => x.extras?.id === n.extras.building), n.name); }
 });
 
+test('실내 i|: 숨김, 층 높이·바깥선 있음, 한 층 64 KB 미만, 단면(안쪽만 보임)', () => {
+  const ii = gltf.nodes.filter((n) => n.name.startsWith('i|'));
+  assert.ok(ii.length >= 50, `실내 ${ii.length}`);
+  for (const n of ii) {
+    assert.equal(n.extras.hidden, true);
+    assert.ok(Number.isFinite(n.extras.m) && n.extras.rings?.length && n.extras.interior, n.name);
+    const p = gltf.meshes[n.mesh].primitives[0];
+    assert.equal(gltf.materials[p.material].doubleSided, false, n.name);
+    const a = gltf.accessors[p.attributes.POSITION];
+    assert.ok(a.min[1] > n.extras.m - 0.5 && a.max[1] < n.extras.m + 3, `${n.name} y ${a.min[1]}..${a.max[1]}`);
+    const bytes = Object.values(p.attributes).concat([p.indices]).reduce((s2, i) => s2 + gltf.bufferViews[gltf.accessors[i].bufferView].byteLength, 0);
+    assert.ok(bytes < 64 * 1024, `${n.name} ${bytes}`);
+    // 정점 합침(export/weld-interiors.mjs): 색인이 정점보다 많아야 함(삼각형마다 3점이면 같음)
+    assert.ok(gltf.accessors[p.indices].count > a.count, `${n.name} 정점 ${a.count} 색인 ${gltf.accessors[p.indices].count}`);
+  }
+});
+
 test('층 판 하나는 작음(16 KB 미만)', () => {
   for (const n of gltf.nodes.filter((x) => x.name.startsWith('f|'))) {
     const p = gltf.meshes[n.mesh].primitives[0];

@@ -7,12 +7,18 @@
 //   lines             길·구역 테두리 선
 //   b|<buildingId>    건물 하나(덩어리+창·지붕, 빛 받음). extras: { name, baseM, roofM }
 //   f|<buildingId>|<i> 층 판(처음엔 숨김). extras: { name, m, building }
+//   i|<동>|<층 높이>   실내 빈 곳(복도·로비·계단·승강기) 한 층: 바닥+벽+천장, 안쪽만 보임(처음엔 숨김, 1인칭용).
+//                      extras: { interior: 동, m, floor, rings: [[x,y]…](EPSG:5186, 합친 바깥선) }
 import fs from 'node:fs';
 import path from 'node:path';
 import earcut from '../vendor/tracker/node_modules/earcut/src/earcut.js';
 import { makeFrame } from './geo.mjs';
+import { createRequire } from 'node:module';
+const ClipperLib = createRequire(import.meta.url)('../vendor/tracker/node_modules/clipper-lib/clipper.js');
 
 const [server = 'http://127.0.0.1:5291', outFile = 'native/assets/campus.glb'] = process.argv.slice(2);
+// 실내 자료(사2, 동 노트에서 만든 것). 읽기만 함.
+const INTERIORS = process.env.INTERIORS ?? 'C:/campus-tracker-claude/frontend/public/interiors.geojson';
 const meta = JSON.parse(fs.readFileSync('out/capture.json', 'utf8'));
 const bin = fs.readFileSync('out/capture.bin');
 const [lon0, lat0] = meta.origin;
@@ -130,6 +136,82 @@ for (const b of scene.buildings) {
   });
 }
 
+// ---------- 실내(1인칭): 동·층마다 빈 곳을 합쳐 벽, 빈 곳마다 바닥, 천장 ----------
+// 벽 높이는 실내 문서(level-view)의 복도 상자 높이 2.7 m. 면은 안쪽(빈 곳 쪽)만 앞면 → 위에서 보면 속이 보이고 안에서는 막힘.
+const ROOM_M = 2.7;
+const interiorMeshes = [];
+if (fs.existsSync(INTERIORS)) {
+  const fc = JSON.parse(fs.readFileSync(INTERIORS, 'utf8'));
+  const KIND = { corridor: [214, 208, 196, 255], lobby: [222, 214, 198, 255], link: [206, 214, 222, 255], stair: [186, 204, 228, 255], elevator: [214, 192, 232, 255] };
+  const LIFT = { corridor: 0.02, link: 0.025, lobby: 0.03, stair: 0.04, elevator: 0.05 };
+  const groups = new Map(); // `${동}|${m}` → { building, m, floor, polys: [{kind, rings}] }
+  for (const f of fc.features) {
+    const pr = f.properties, polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+    pr.floorsM.forEach((m, i) => {
+      const key = `${pr.building}|${m.toFixed(2)}`;
+      if (!groups.has(key)) groups.set(key, { building: pr.building, m, floor: pr.floors[i], polys: [] });
+      for (const rings of polys) groups.get(key).polys.push({ kind: pr.kind, rings });
+    });
+  }
+  const S = 1000; // Clipper: 정수 mm
+  const enu = (x, y, h) => { const q = frame.fromTm(x, y, h); return [q[0], -q[2], q[1]]; };
+  // 삼각형 하나를 원하는 법선 쪽으로 감아 넣음(동·북·위 공간에서 판단 — MeshBuilder 의 축 바꿈은 회전이라 감김이 그대로)
+  const tri = (out, a, b, c, want) => {
+    const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    out.push(...((n[0] * want[0] + n[1] * want[1] + n[2] * want[2]) >= 0 ? [a, b, c] : [a, c, b]));
+  };
+  for (const g of groups.values()) {
+    const mb = new MeshBuilder();
+    const push = (vs, col) => { if (vs.length) mb.add(vs.flat(), null, () => col, null); };
+    const cp = new ClipperLib.Clipper();
+    // 바닥(빈 곳마다, 종류 색)과 천장
+    for (const { kind, rings } of g.polys) {
+      const flat = [], holes = [];
+      rings.forEach((ring, r) => { if (r) holes.push(flat.length / 2); for (const [x, y] of ring.slice(0, -1)) flat.push(x, y); });
+      const t = earcut(flat, holes);
+      const fl = [], ce = [], lift = LIFT[kind] ?? 0.02;
+      for (let k = 0; k < t.length; k += 3) {
+        const P = (j, h) => enu(flat[2 * t[k + j]], flat[2 * t[k + j] + 1], h);
+        tri(fl, P(0, g.m + lift), P(1, g.m + lift), P(2, g.m + lift), [0, 0, 1]);
+        tri(ce, P(0, g.m + ROOM_M), P(1, g.m + ROOM_M), P(2, g.m + ROOM_M), [0, 0, -1]);
+      }
+      push(fl, KIND[kind] ?? KIND.corridor);
+      push(ce, [246, 245, 241, 255]);
+      cp.AddPaths(rings.map((ring) => ring.map(([x, y]) => ({ X: Math.round(x * S), Y: Math.round(y * S) }))), ClipperLib.PolyType.ptSubject, true);
+    }
+    const sol = new ClipperLib.Paths();
+    cp.Execute(ClipperLib.ClipType.ctUnion, sol, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+    // 벽: 합친 바깥선(바깥 고리는 반시계, 구멍은 시계 → 빈 곳은 언제나 진행 방향 왼쪽). 3 m 마다 판 색을 바꿔 깊이 단서.
+    const rings = [];
+    for (const path of sol) {
+      const pts = path.map((q) => [q.X / S, q.Y / S]);
+      rings.push(pts.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]));
+      for (let k = 0; k < pts.length; k++) {
+        const [ax, ay] = pts[k], [bx, by] = pts[(k + 1) % pts.length];
+        const len = Math.hypot(bx - ax, by - ay);
+        if (len < 0.05) continue;
+        const left = [-(by - ay) / len, (bx - ax) / len, 0];
+        const n = Math.max(1, Math.round(len / 3));
+        for (let j = 0; j < n; j++) {
+          const x0 = ax + ((bx - ax) * j) / n, y0 = ay + ((by - ay) * j) / n, x1 = ax + ((bx - ax) * (j + 1)) / n, y1 = ay + ((by - ay) * (j + 1)) / n;
+          const a = enu(x0, y0, g.m), b = enu(x1, y1, g.m), c = enu(x1, y1, g.m + ROOM_M), d = enu(x0, y0, g.m + ROOM_M);
+          const w = [];
+          tri(w, a, b, c, left); tri(w, a, c, d, left);
+          push(w, (j + k) % 2 ? [226, 230, 235, 255] : [238, 240, 243, 255]);
+          // 걸레받이(0.12 m, 어둡게): 바닥과 벽 경계를 또렷하게
+          const off = (p) => [p[0] + left[0] * 0.01, p[1] + left[1] * 0.01, p[2]];
+          const e = off(enu(x0, y0, g.m + 0.12)), f2 = off(enu(x1, y1, g.m + 0.12));
+          const sk = [];
+          tri(sk, off(a), off(b), f2, left); tri(sk, off(a), f2, e, left);
+          push(sk, [120, 128, 140, 255]);
+        }
+      }
+    }
+    interiorMeshes.push({ name: `i|${g.building}|${g.m.toFixed(2)}`, extras: { interior: g.building, m: g.m, floor: g.floor, rings }, mesh: mb });
+  }
+}
+
 // ---------- glTF 쓰기 ----------
 const gltf = { asset: { version: '2.0', generator: 'campus-3d-lab build-glb' }, scene: 0, scenes: [{ nodes: [] }], nodes: [], meshes: [], materials: [], accessors: [], bufferViews: [], buffers: [], extensionsUsed: ['KHR_materials_unlit'] };
 const parts = []; let byteLength = 0;
@@ -144,8 +226,8 @@ function accessor(typed, type, componentType, count, extra = {}) {
   gltf.accessors.push({ bufferView: bufferView(typed, extra.target), componentType, count, type, ...(extra.normalized ? { normalized: true } : {}), ...(extra.min ? { min: extra.min, max: extra.max } : {}) });
   return gltf.accessors.length - 1;
 }
-const material = (name, unlit, opts = {}) => { gltf.materials.push({ name, pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 1, ...(opts.texture != null ? { baseColorTexture: { index: opts.texture } } : {}) }, ...(unlit ? { extensions: { KHR_materials_unlit: {} } } : {}), doubleSided: true }); return gltf.materials.length - 1; };
-const M_LIT = material('lit', false), M_UNLIT = material('unlit', true);
+const material = (name, unlit, opts = {}) => { gltf.materials.push({ name, pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 1, ...(opts.texture != null ? { baseColorTexture: { index: opts.texture } } : {}) }, ...(unlit ? { extensions: { KHR_materials_unlit: {} } } : {}), doubleSided: !opts.single }); return gltf.materials.length - 1; };
+const M_LIT = material('lit', false), M_UNLIT = material('unlit', true), M_INTERIOR = material('interior', true, { single: true });
 function minmax(p) { const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity]; for (let i = 0; i < p.length; i += 3) for (let k = 0; k < 3; k++) { mn[k] = Math.min(mn[k], p[i + k]); mx[k] = Math.max(mx[k], p[i + k]); } return { min: mn, max: mx }; }
 const report = [];
 function addMesh(name, mb, mat, extras, hidden) {
@@ -183,7 +265,8 @@ addMesh('lines', lines, M_UNLIT);
 const sceneById = new Map(scene.buildings.map((b) => [b.buildingId, b]));
 for (const [id, mb] of buildings) { const b = sceneById.get(id); addMesh(`b|${id}`, mb, M_LIT, { id, name: b?.name ?? id, baseM: b?.baseM, roofM: b?.roofM }); }
 for (const f of floorMeshes) addMesh(f.name, f.mesh, M_LIT, f.extras, true);
-gltf.extras = { origin: meta.origin, grid: { originX: grid.originX, originY: grid.originY, resolution: grid.resolution, width: grid.width, height: grid.height }, frame: 'x=east, y=up(MSL m), z=-north; origin lon/lat at height 0', capturedFrom: 'client3d (feature/client3d 47b5531) + /api/v1/scene, /api/v1/terrain/grid' };
+for (const f of interiorMeshes) addMesh(f.name, f.mesh, M_INTERIOR, f.extras, true);
+gltf.extras = { origin: meta.origin, grid: { originX: grid.originX, originY: grid.originY, resolution: grid.resolution, width: grid.width, height: grid.height }, frame: 'x=east, y=up(MSL m), z=-north; origin lon/lat at height 0', capturedFrom: `client3d (${process.env.CAPTURED_FROM ?? 'campus-tracker'}) + /api/v1/scene, /api/v1/terrain/grid + interiors.geojson` };
 gltf.buffers.push({ byteLength });
 
 const json = Buffer.from(JSON.stringify(gltf));
@@ -199,7 +282,7 @@ const sum = (f) => report.filter(f).reduce((a, r) => ({ v: a.v + r.vertices, t: 
 const summary = {
   file: outFile, bytes: total, groupsIn: stats.groups, skipped: stats.skipped,
   ground: sum((r) => r.name === 'ground'), structures: sum((r) => r.name === 'structures'), surfaces: sum((r) => r.name === 'surfaces'), lines: sum((r) => r.name === 'lines'),
-  buildings: { count: buildings.size, ...sum((r) => r.name.startsWith('b|')) }, floors: { count: floorMeshes.length, ...sum((r) => r.name.startsWith('f|')), maxBytes: Math.max(...report.filter((r) => r.name.startsWith('f|')).map((r) => r.bytes)) },
+  buildings: { count: buildings.size, ...sum((r) => r.name.startsWith('b|')) }, interiors: { count: interiorMeshes.length, ...sum((r) => r.name.startsWith('i|')) }, floors: { count: floorMeshes.length, ...sum((r) => r.name.startsWith('f|')), maxBytes: Math.max(...report.filter((r) => r.name.startsWith('f|')).map((r) => r.bytes)) },
 };
 fs.writeFileSync('out/size-report.json', JSON.stringify({ summary, nodes: report }, null, 1));
 console.log(JSON.stringify(summary, null, 1));

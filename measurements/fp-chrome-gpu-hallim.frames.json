@@ -1,0 +1,53 @@
+{
+ "n": 1437,
+ "p50": 8.300000071525574,
+ "p95": 8.5,
+ "max": 39.5,
+ "fps": 119.8308858469944,
+ "info": {
+  "s": 52.47980079929576,
+  "total": 52.47980079929576,
+  "level": 1,
+  "levels": 2,
+  "transitions": [
+   {
+    "s0": 26.7,
+    "s1": 42.4,
+    "kind": "stairs",
+    "label": "계단으로 한림관 3층"
+   }
+  ],
+  "turns": [
+   {
+    "s": 20.4,
+    "dir": "left",
+    "deg": 46
+   },
+   {
+    "s": 25.4,
+    "dir": "left",
+    "deg": 43
+   },
+   {
+    "s": 45.8,
+    "dir": "right",
+    "deg": 36
+   }
+  ],
+  "floor": "한림관 3층",
+  "phase": "walk",
+  "visible": {
+   "interiors": 5,
+   "buildingsHidden": 4
+  }
+ },
+ "render": {
+  "frame": 2404,
+  "calls": 17,
+  "triangles": 7677,
+  "points": 0,
+  "lines": 0,
+  "geometries": 51
+ },
+ "gl": "ANGLE (AMD, AMD Radeon RX 7900 XTX (0x0000744C) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+}

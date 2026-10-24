@@ -8,6 +8,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { Animated, Image, PanResponder, PixelRatio, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import * as THREE from 'three';
 import { createCampusScene, type CampusScene } from './campusScene';
+import type { FpStep, Hud } from './firstPerson';
 import type { PageEvent } from './protocol';
 
 // Hermes 에 없을 수 있는 것(GLTFLoader 가 JSON 덩어리를 읽을 때 씀)
@@ -27,6 +28,8 @@ const CAMPUS_GLB = require('../assets/campus.glb');
 export interface Campus3DHandle {
   /** client3d 와 같은 명령(객체 또는 JSON 문자열) */
   post: (msg: unknown) => void;
+  /** 1인칭 안내(시험): 경로(EPSG:5186 점 + 단계)로 시작, null 이면 끝 */
+  firstPerson: (route: { points: number[][]; steps?: FpStep[] } | null, opts?: { speed?: number }) => void;
 }
 export interface Campus3DProps {
   onEvent?: (e: PageEvent) => void;
@@ -37,6 +40,8 @@ export interface Campus3DProps {
   logFrames?: boolean;
   /** 측정용: LOAD3D·FIRST_FRAME·FRAMES 글을 앱에도 넘김(삼성 실기기는 release 앱의 console 을 logcat 에 안 남김) */
   onStats?: (text: string) => void;
+  /** 1인칭 안내 글(다음 꺾임·층 바뀜·남은 거리) */
+  onHud?: (h: Hud) => void;
 }
 
 async function loadGlb(): Promise<ArrayBuffer> {
@@ -51,12 +56,13 @@ async function loadGlb(): Promise<ArrayBuffer> {
   }
 }
 
-export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function Campus3DView({ onEvent, light = false, style, logFrames = false, onStats }, ref) {
+export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function Campus3DView({ onEvent, light = false, style, logFrames = false, onStats, onHud }, ref) {
   const sceneRef = useRef<CampusScene | null>(null);
   const queue = useRef<unknown[]>([]);
   const handler = useRef(onEvent);
   const statsRef = useRef(onStats);
-  useEffect(() => { handler.current = onEvent; statsRef.current = onStats; });
+  const hudRef = useRef(onHud);
+  useEffect(() => { handler.current = onEvent; statsRef.current = onStats; hudRef.current = onHud; });
   const stat = (t: string) => { console.log(t); statsRef.current?.(t); };
   const [markers, setMarkers] = useState<{ ok: string | null; uncertain: string | null }>({ ok: null, uncertain: null });
   const [markerState, setMarkerState] = useState<'ok' | 'uncertain' | null>(null);
@@ -70,7 +76,12 @@ export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function C
     if (sceneRef.current) sceneRef.current.command(msg);
     else queue.current.push(msg);
   }, []);
-  useImperativeHandle(ref, () => ({ post }), [post]);
+  const firstPerson = useCallback((route: { points: number[][]; steps?: FpStep[] } | null, opts?: { speed?: number }) => {
+    const s = sceneRef.current;
+    if (!s) return;
+    if (route) { const t0 = Date.now(); s.firstPerson.start(route, opts); stat(`FP_START ${Date.now() - t0} ms ${route.points.length} pts`); } else s.firstPerson.stop();
+  }, []);
+  useImperativeHandle(ref, () => ({ post, firstPerson }), [post, firstPerson]);
 
   const onContextCreate = useCallback(async (gl: ExpoWebGLRenderingContext) => {
     const t0 = Date.now();
@@ -87,7 +98,7 @@ export const Campus3DView = forwardRef<Campus3DHandle, Campus3DProps>(function C
       renderer.setPixelRatio(1);
       const glb = await loadGlb();
       const tAsset = Date.now();
-      const scene = await createCampusScene({ renderer, width: w, height: h, glb, light, emit: (e) => handler.current?.(e) });
+      const scene = await createCampusScene({ renderer, width: w, height: h, glb, light, emit: (e) => handler.current?.(e), onHud: (h) => hudRef.current?.(h) });
       sceneRef.current = scene;
       for (const m of queue.current.splice(0)) scene.command(m);
       stat(`LOAD3D asset ${tAsset - t0} ms, scene ${Date.now() - tAsset} ms, total ${Date.now() - t0} ms, buffer ${w}x${h}`);
