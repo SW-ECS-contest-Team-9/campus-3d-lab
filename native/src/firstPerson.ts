@@ -36,6 +36,8 @@ export const FP = {
   /** 따라가기(걸으며): 카메라가 목표 거리(보정 위치의 경로 위 거리)를 쫓는 시간 상수(s)와 최대 속도(m/s) — 위치가 튀어도 부드럽게 */
   followTauS: 0.8,
   followMaxMps: 3,
+  /** 승강기에서 내린 뒤 이보다 짧으면(m) 도착이 승강기 안이라 보고 문 쪽을 봄 */
+  elevatorArriveM: 1.5,
   /** 덮인 통로: 머리 위(발 + 이 높이 넘게) 면이 있고 실내 자료가 없는 구간이 이만큼 이상 이어지면(m) 통로를 만들어 보임 */
   coverAboveM: 2.2,
   coverMinM: 3,
@@ -167,8 +169,13 @@ export function createFirstPerson(host: FpHost, onHud?: (h: Hud) => void) {
   const yawTo = (a: THREE.Vector3, b: THREE.Vector3) => Math.atan2(-(b.x - a.x), -(b.z - a.z));
   const headingAt = (s: number, ahead: number) => {
     const l = levels[levelOf(s)];
+    // 승강기에서 내린 뒤 걸을 길이 거의 없으면(도착이 승강기 안): 타러 들어간 방향의 반대(문 쪽, 승강기 앞 복도)를 봄
+    const k = levels.indexOf(l), t = k > 0 ? trans[k - 1] : null;
+    if (t?.kind === 'elevator' && l.s1 - l.s0 < FP.elevatorArriveM) { const p0 = posAt(Math.max(0, t.s0 - 2)), p1 = posAt(t.s0); if (Math.hypot(p1.x - p0.x, p1.z - p0.z) > 0.3) return wrap(yawTo(p0, p1) + Math.PI); }
     const a = posAt(s), b = posAt(Math.min(l.s1, s + ahead));
-    if (Math.hypot(b.x - a.x, b.z - a.z) < 0.3) { const c = posAt(Math.max(l.s0, s - 2)); return Math.hypot(a.x - c.x, a.z - c.z) > 0.3 ? yawTo(c, a) : st.yaw; }
+    if (Math.hypot(b.x - a.x, b.z - a.z) < 0.3) {
+      const c = posAt(Math.max(l.s0, s - 2)); return Math.hypot(a.x - c.x, a.z - c.z) > 0.3 ? yawTo(c, a) : st.yaw;
+    }
     return yawTo(a, b);
   };
 
