@@ -1,0 +1,94 @@
+{
+ "n": 126,
+ "p50": 100.20000004768372,
+ "p95": 110.10000002384186,
+ "max": 133.40000009536743,
+ "fps": 10.56541754368764,
+ "info": {
+  "s": 48.652796659469686,
+  "total": 334.8617169242349,
+  "level": 0,
+  "levels": 3,
+  "transitions": [
+   {
+    "s0": 294.5,
+    "s1": 296.9,
+    "kind": "stairs",
+    "label": "계단으로 북악관 B1"
+   },
+   {
+    "s0": 319.1,
+    "s1": 334.9,
+    "kind": "elevator",
+    "label": "승강기로 북악관 6층"
+   }
+  ],
+  "turns": [
+   {
+    "s": 141.4,
+    "dir": "left",
+    "deg": 43
+   },
+   {
+    "s": 177.8,
+    "dir": "right",
+    "deg": 38
+   },
+   {
+    "s": 190.7,
+    "dir": "left",
+    "deg": 45
+   },
+   {
+    "s": 202.9,
+    "dir": "right",
+    "deg": 119
+   },
+   {
+    "s": 219.8,
+    "dir": "left",
+    "deg": 54
+   },
+   {
+    "s": 231.8,
+    "dir": "left",
+    "deg": 46
+   },
+   {
+    "s": 256.2,
+    "dir": "right",
+    "deg": 56
+   },
+   {
+    "s": 268.2,
+    "dir": "left",
+    "deg": 47
+   },
+   {
+    "s": 275.3,
+    "dir": "right",
+    "deg": 115
+   },
+   {
+    "s": 311.5,
+    "dir": "right",
+    "deg": 39
+   }
+  ],
+  "floor": null,
+  "phase": "walk",
+  "visible": {
+   "interiors": 0,
+   "buildingsHidden": 0
+  }
+ },
+ "render": {
+  "frame": 219,
+  "calls": 19,
+  "triangles": 338806,
+  "points": 0,
+  "lines": 5074,
+  "geometries": 47
+ },
+ "gl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+}

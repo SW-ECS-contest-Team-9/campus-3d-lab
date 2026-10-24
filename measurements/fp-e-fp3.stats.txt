@@ -1,0 +1,3 @@
+LOAD3D asset 554 ms, scene 490 ms, total 1044 ms, buffer 1080x2400
+FIRST_FRAME 1622 ms {"frame":1,"calls":39,"triangles":346021,"points":0,"lines":5074,"geometries":39}
+FP_START 165 ms 149 pts
