@@ -12,7 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import earcut from '../vendor/tracker/node_modules/earcut/src/earcut.js';
-import { makeFrame } from './geo.mjs';
+import { makeFrame, tmForward } from './geo.mjs';
 import { createRequire } from 'node:module';
 const ClipperLib = createRequire(import.meta.url)('../vendor/tracker/node_modules/clipper-lib/clipper.js');
 
@@ -78,12 +78,42 @@ const STEP = 2;
 const rgbaHead = JSON.parse(fs.readFileSync('out/ground.rgba.json', 'utf8'));
 const ground = { pos: [], uv: [], idx: [], image: { w: rgbaHead.w, h: rgbaHead.h, data: fs.readFileSync('out/ground.rgba') } };
 const [rw, rs, re, rn] = meta.ground.rect; // 라디안
+// 웹 미리보기(structures-layer·road-surface-layer·scene-local-corrections)가 지형을 숨기는 곳과 같게: 캠퍼스 구역·기단·
+// 지표면·terrain-clip 폴리곤 안은 지형을 그리지 않는다(세 점 다 안이면 삼각형 제거, 경계 삼각형은 안쪽 점을 내려 구조물 밑으로).
+const scene0 = await (await fetch(`${server}/api/v1/scene`)).json();
+const STRUCTURES_DIR = process.env.STRUCTURES_DIR ?? 'C:/campus-tracker-claude/frontend/public';
+const clipPolys = []; // 각 항목: [outer, ...holes] (EPSG:5186 링)
+const polysOf = (geom) => !geom ? [] : geom.type === 'MultiPolygon' ? geom.coordinates : geom.type === 'Polygon' ? [geom.coordinates] : []; // 선·점은 무시
+for (const g of scene0.campus ?? []) {
+  const geom = typeof g === 'string' ? JSON.parse(g) : g;
+  for (const poly of polysOf(geom)) clipPolys.push(poly.map((ring) => ring.map(([lon, lat]) => { const p = tmForward(lat, lon); return [p.x, p.y]; })));
+}
+const clipTypes = new Set(['platform', 'surface']);
+for (const file of fs.readdirSync(`${STRUCTURES_DIR}/structures`).filter((f) => f.endsWith('.geojson'))) {
+  for (const f of JSON.parse(fs.readFileSync(`${STRUCTURES_DIR}/structures/${file}`, 'utf8')).features) {
+    if (!clipTypes.has(f.properties?.type)) continue;
+    for (const poly of polysOf(f.geometry)) clipPolys.push(poly);
+  }
+}
+if (fs.existsSync(`${STRUCTURES_DIR}/corrections/terrain-clip-v1.geojson`)) {
+  for (const f of JSON.parse(fs.readFileSync(`${STRUCTURES_DIR}/corrections/terrain-clip-v1.geojson`, 'utf8')).features) {
+    for (const poly of polysOf(f.geometry)) clipPolys.push(poly);
+  }
+}
+const ringHas = (x, y, ring) => { let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const [xi, yi] = ring[i], [xj, yj] = ring[j]; if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside; } return inside; };
+const bboxes = clipPolys.map((poly) => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const [x, y] of poly[0]) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); } return [x0, y0, x1, y1]; });
+const clipped = (x, y) => clipPolys.some((poly, k) => { const b = bboxes[k]; return x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3] && ringHas(x, y, poly[0]) && !poly.slice(1).some((h) => ringHas(x, y, h)); });
+const HIDE_DROP_M = 1.5;
+
 const cols = Math.floor((grid.width - 1) / STEP) + 1, rows = Math.floor((grid.height - 1) / STEP) + 1;
+const hidden = new Uint8Array(cols * rows);
 for (let j = 0; j < rows; j++) {
   for (let i = 0; i < cols; i++) {
     const gi = i * STEP, gj = j * STEP;
     const x = grid.originX + (gi + 0.5) * grid.resolution, y = grid.originY + (gj + 0.5) * grid.resolution;
-    const h = heights[gj * grid.width + gi] - 0.3;
+    const hide = clipped(x, y);
+    hidden[j * cols + i] = hide ? 1 : 0;
+    const h = heights[gj * grid.width + gi] - 0.3 - (hide ? HIDE_DROP_M : 0);
     const p = frame.fromTm(x, y, h);
     ground.pos.push(...p);
     // 바닥 그림의 경위도 사각형 안 위치(위쪽이 북)
@@ -91,10 +121,13 @@ for (let j = 0; j < rows; j++) {
     ground.uv.push(llx, 1 - lly);
   }
 }
+let hiddenTris = 0;
 for (let j = 0; j + 1 < rows; j++) for (let i = 0; i + 1 < cols; i++) {
   const a = j * cols + i, b = a + 1, c = a + cols, d = c + 1;
-  ground.idx.push(a, b, c, b, d, c);
+  if (!(hidden[a] && hidden[b] && hidden[c])) ground.idx.push(a, b, c); else hiddenTris++;
+  if (!(hidden[b] && hidden[d] && hidden[c])) ground.idx.push(b, d, c); else hiddenTris++;
 }
+console.log(`ground: clip polygons ${clipPolys.length}, hidden cells ${hidden.reduce((s, v) => s + v, 0)}/${hidden.length}, removed triangles ${hiddenTris}`);
 void rw; void rs; void re; void rn;
 
 // ---------- 층 판(층 펼치기·한 층 보기용) ----------
